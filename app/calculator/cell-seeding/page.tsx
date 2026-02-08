@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import CalcActions from "../_components/CalcActions";
 
 type PlatePreset = "6-well" | "12-well" | "24-well" | "48-well" | "96-well" | "custom";
+type VolUnit = "µL" | "mL";
 
 const PRESETS: Record<Exclude<PlatePreset, "custom">, { wells: number; wellVolumeUL: number }> = {
   "6-well": { wells: 6, wellVolumeUL: 2000 },
@@ -13,19 +14,26 @@ const PRESETS: Record<Exclude<PlatePreset, "custom">, { wells: number; wellVolum
   "96-well": { wells: 96, wellVolumeUL: 100 },
 };
 
+const VOL_TO_UL: Record<VolUnit, number> = { "µL": 1, mL: 1000 };
+
 function fmt(x: number, maxFrac = 2) {
   if (!Number.isFinite(x)) return "—";
   return x.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
 }
 
+function fromUL(valueUL: number, unit: VolUnit) {
+  return valueUL / VOL_TO_UL[unit];
+}
+
 export default function CellSeedingPage() {
   const [preset, setPreset] = useState<PlatePreset>("24-well");
-  const [wellsToSeed, setWellsToSeed] = useState<number>(24);
-  const [dispenseUL, setDispenseUL] = useState<number>(500);
+  const [wellsToSeed, setWellsToSeed] = useState<string>("24");
+  const [dispenseVol, setDispenseVol] = useState<string>("500");
+  const [dispenseUnit, setDispenseUnit] = useState<VolUnit>("µL");
 
-  const [measuredCellsPerMl, setMeasuredCellsPerMl] = useState<number>(1_000_000);
-  const [targetCellsPerWell, setTargetCellsPerWell] = useState<number>(50_000);
-  const [overagePercent, setOveragePercent] = useState<number>(10);
+  const [measuredCellsPerMl, setMeasuredCellsPerMl] = useState<string>("1000000");
+  const [targetCellsPerWell, setTargetCellsPerWell] = useState<string>("50000");
+  const [overagePercent, setOveragePercent] = useState<string>("10");
 
   const activePreset = preset === "custom" ? null : PRESETS[preset];
 
@@ -33,7 +41,8 @@ export default function CellSeedingPage() {
     const Cstock = Number(measuredCellsPerMl) || 0; // cells/mL
     const targetCells = Number(targetCellsPerWell) || 0; // cells/well
     const wells = Number(wellsToSeed) || 0;
-    const VwellUL = Number(dispenseUL) || 0;
+    const VwellInput = Number(dispenseVol) || 0;
+    const VwellUL = VwellInput * VOL_TO_UL[dispenseUnit];
     const overage = Math.max(0, Number(overagePercent) || 0) / 100;
 
     if (Cstock <= 0 || targetCells <= 0 || wells <= 0 || VwellUL <= 0) return null;
@@ -77,7 +86,7 @@ export default function CellSeedingPage() {
       dilutionRatio,
       canDilute: Cstock >= targetMixCellsPerMl,
     };
-  }, [measuredCellsPerMl, targetCellsPerWell, wellsToSeed, dispenseUL, overagePercent]);
+  }, [measuredCellsPerMl, targetCellsPerWell, wellsToSeed, dispenseVol, dispenseUnit, overagePercent]);
 
   const invalid = !result;
 
@@ -85,8 +94,7 @@ export default function CellSeedingPage() {
     <main className="calc-page">
       <h1>Mammalian Cell Seeding</h1>
       <p style={{ opacity: 0.85 }}>
-        User-requested feature for mammalian tissue-culture workflows: enter your measured cells/mL and target cells/well,
-        then get clear per-well seeding volume and full-plate dilution/mix instructions for common plate formats.
+        Plan per-well seeding volume and full-plate dilution/mix from your measured cells/mL and target cells/well.
       </p>
 
       <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
@@ -98,8 +106,9 @@ export default function CellSeedingPage() {
               const next = e.target.value as PlatePreset;
               setPreset(next);
               if (next !== "custom") {
-                setWellsToSeed(PRESETS[next].wells);
-                setDispenseUL(PRESETS[next].wellVolumeUL);
+                setWellsToSeed(String(PRESETS[next].wells));
+                setDispenseUnit("µL");
+                setDispenseVol(String(PRESETS[next].wellVolumeUL));
               }
             }}
           >
@@ -115,30 +124,33 @@ export default function CellSeedingPage() {
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Number of wells to seed</label>
-          <input type="number" onFocus={(e) => e.currentTarget.select()} value={wellsToSeed} onChange={(e) => setWellsToSeed(Number(e.target.value))} style={{ width: 160 }} />
+          <input type="text" inputMode="numeric" onFocus={(e) => e.currentTarget.select()} value={wellsToSeed} onChange={(e) => setWellsToSeed(e.target.value)} style={{ width: 160 }} />
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Dispense volume per well</label>
-          <input type="number" onFocus={(e) => e.currentTarget.select()} value={dispenseUL} onChange={(e) => setDispenseUL(Number(e.target.value))} style={{ width: 160 }} />
-          <span>µL</span>
+          <input type="text" inputMode="decimal" onFocus={(e) => e.currentTarget.select()} value={dispenseVol} onChange={(e) => setDispenseVol(e.target.value)} style={{ width: 160 }} />
+          <select value={dispenseUnit} onChange={(e) => setDispenseUnit(e.target.value as VolUnit)}>
+            <option value="µL">µL</option>
+            <option value="mL">mL</option>
+          </select>
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Measured cell concentration</label>
-          <input type="number" onFocus={(e) => e.currentTarget.select()} value={measuredCellsPerMl} onChange={(e) => setMeasuredCellsPerMl(Number(e.target.value))} style={{ width: 200 }} />
+          <input type="text" inputMode="decimal" onFocus={(e) => e.currentTarget.select()} value={measuredCellsPerMl} onChange={(e) => setMeasuredCellsPerMl(e.target.value)} style={{ width: 200 }} />
           <span>cells/mL</span>
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Target seeding density</label>
-          <input type="number" onFocus={(e) => e.currentTarget.select()} value={targetCellsPerWell} onChange={(e) => setTargetCellsPerWell(Number(e.target.value))} style={{ width: 200 }} />
+          <input type="text" inputMode="decimal" onFocus={(e) => e.currentTarget.select()} value={targetCellsPerWell} onChange={(e) => setTargetCellsPerWell(e.target.value)} style={{ width: 200 }} />
           <span>cells/well</span>
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Extra mix (dead volume)</label>
-          <input type="number" onFocus={(e) => e.currentTarget.select()} value={overagePercent} onChange={(e) => setOveragePercent(Number(e.target.value))} style={{ width: 120 }} />
+          <input type="text" inputMode="decimal" onFocus={(e) => e.currentTarget.select()} value={overagePercent} onChange={(e) => setOveragePercent(e.target.value)} style={{ width: 120 }} />
           <span>%</span>
         </div>
       </div>
@@ -150,7 +162,7 @@ export default function CellSeedingPage() {
           <section className="calc-card" style={{ marginTop: 18 }}>
             <div style={{ fontWeight: 800, marginBottom: 8 }}>Per-well volume from measured stock</div>
             <div>
-              Add <strong>{fmt(result.stockPerWellUL, 2)} µL</strong> cell suspension + <strong>{fmt(result.mediaPerWellUL, 2)} µL</strong> media per well.
+              Add <strong>{fmt(fromUL(result.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> cell suspension + <strong>{fmt(fromUL(result.mediaPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> media per well.
             </div>
             {result.mediaPerWellUL < 0 ? (
               <p style={{ marginTop: 8, color: "#64748b" }}>
@@ -162,8 +174,8 @@ export default function CellSeedingPage() {
           <section className="calc-card" style={{ marginTop: 14 }}>
             <div style={{ fontWeight: 800, marginBottom: 8 }}>Whole-plate seeding mix</div>
             <div>Target mix concentration: <strong>{fmt(result.targetMixCellsPerMl, 0)} cells/mL</strong></div>
-            <div style={{ marginTop: 4 }}>Total dispense volume: <strong>{fmt(result.totalDispenseUL, 0)} µL</strong></div>
-            <div style={{ marginTop: 4 }}>Prepare total mix: <strong>{fmt(result.totalMixUL, 0)} µL</strong> ({fmt(result.totalMixMl, 3)} mL, includes {fmt(overagePercent, 1)}% extra)</div>
+            <div style={{ marginTop: 4 }}>Total dispense volume: <strong>{fmt(fromUL(result.totalDispenseUL, dispenseUnit), 2)} {dispenseUnit}</strong></div>
+            <div style={{ marginTop: 4 }}>Prepare total mix: <strong>{fmt(fromUL(result.totalMixUL, dispenseUnit), 2)} {dispenseUnit}</strong> ({fmt(result.totalMixMl, 3)} mL, includes {fmt(Number(overagePercent) || 0, 1)}% extra)</div>
 
             {result.canDilute ? (
               <div style={{ marginTop: 8 }}>
@@ -183,7 +195,7 @@ export default function CellSeedingPage() {
         copyText={
           invalid || !result
             ? undefined
-            : `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${result.VwellUL} µL\nPer well: ${result.stockPerWellUL.toFixed(2)} µL cells + ${result.mediaPerWellUL.toFixed(2)} µL media\nTotal mix: ${result.totalMixUL.toFixed(0)} µL\nTarget mix conc: ${result.targetMixCellsPerMl.toFixed(0)} cells/mL`
+            : `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${fromUL(result.VwellUL, dispenseUnit)} ${dispenseUnit}\nPer well: ${fromUL(result.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells + ${fromUL(result.mediaPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} media\nTotal mix: ${fromUL(result.totalMixUL, dispenseUnit).toFixed(2)} ${dispenseUnit}\nTarget mix conc: ${result.targetMixCellsPerMl.toFixed(0)} cells/mL`
         }
       />
     </main>
