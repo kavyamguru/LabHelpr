@@ -17,7 +17,7 @@ export default function MolecularWeightPage() {
     <main className="calc-page">
       <h1>Molecular Weight</h1>
       <p style={{ opacity: 0.8 }}>
-        Enter a chemical formula to estimate molecular weight (g/mol). Supports parentheses and hydrates (·).
+        Enter a chemical formula to estimate molecular weight (g/mol). Supports (), [], {}, and hydrates (·).
       </p>
 
       <div style={{ marginTop: 16, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -25,7 +25,7 @@ export default function MolecularWeightPage() {
         <input
           value={formula}
           onChange={(e) => setFormula(e.target.value)}
-          placeholder="e.g., C6H12O6 or Ca(OH)2 or MgSO4·7H2O"
+          placeholder="e.g., C6H12O6, Ca(OH)2, K3[Fe(CN)6], MgSO4·7H2O"
           style={{ width: 420 }}
         />
       </div>
@@ -43,7 +43,7 @@ export default function MolecularWeightPage() {
       </div>
 
       <div style={{ marginTop: 14, fontSize: 13, opacity: 0.7 }}>
-        Examples: NaCl, C6H12O6, Ca(OH)2, (NH4)2SO4, MgSO4·7H2O
+        Examples: NaCl, C6H12O6, Ca(OH)2, (NH4)2SO4, K3[Fe(CN)6], MgSO4·7H2O
       </div>
 
       <CalcActions

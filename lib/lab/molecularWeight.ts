@@ -43,18 +43,36 @@ function computeSegmentMass(segment: string): { mass: number; error?: string } {
   const s = segment.replace(/\s+/g, "");
   let i = 0;
 
-  function parseGroup(): { mass: number; error?: string } {
+  const CLOSER_FOR: Record<string, string> = {
+    "(": ")",
+    "[": "]",
+    "{": "}",
+  };
+
+  function parseGroup(stopAt?: string): { mass: number; error?: string } {
     let mass = 0;
 
     while (i < s.length) {
       const ch = s[i];
-      if (ch === ")") break;
 
-      if (ch === "(") {
+      if (stopAt && ch === stopAt) break;
+
+      if (ch === ")" || ch === "]" || ch === "}") {
+        return { mass: 0, error: `Unmatched '${ch}'` };
+      }
+
+      if (ch === "(" || ch === "[" || ch === "{") {
+        const open = ch;
+        const close = CLOSER_FOR[open];
+
         i++;
-        const inner = parseGroup();
+        const inner = parseGroup(close);
         if (inner.error) return inner;
-        if (i >= s.length || s[i] !== ")") return { mass: 0, error: "Missing closing ')'" };
+
+        if (i >= s.length || s[i] !== close) {
+          return { mass: 0, error: `Missing closing '${close}'` };
+        }
+
         i++;
         const { num, next } = parseNumber(s, i);
         i = next;
@@ -96,7 +114,6 @@ function computeSegmentMass(segment: string): { mass: number; error?: string } {
   const g = parseGroup();
   if (g.error) return g;
 
-  if (i < s.length && s[i] === ")") return { mass: 0, error: "Unmatched ')'" };
   if (i !== s.length) return { mass: 0, error: "Could not parse entire formula" };
 
   return { mass: g.mass * leading };
