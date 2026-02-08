@@ -26,6 +26,27 @@ export default function CalculatorPage() {
           </Link>
         ))}
       </section>
+
+      <section className="calc-card" style={{ marginTop: 16 }}>
+        <div style={{ fontWeight: 800, marginBottom: 8 }}>Feedback</div>
+        <p style={{ marginTop: 0, marginBottom: 8, fontSize: 14, opacity: 0.9 }}>
+          Help us improve LH Calculator.
+        </p>
+        <ol style={{ margin: "0 0 12px 18px", padding: 0, fontSize: 14, opacity: 0.9 }}>
+          <li>Open the feedback form.</li>
+          <li>Select the calculator you used.</li>
+          <li>Describe what worked or what issue you saw.</li>
+          <li>Submit your feedback.</li>
+        </ol>
+        <a
+          href="https://forms.office.com/r/TMKSjrwFCh"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontWeight: 700 }}
+        >
+          Open Feedback Form →
+        </a>
+      </section>
     </main>
   );
 }
