@@ -21,10 +21,7 @@ export default function Home() {
       </header>
 
       <section className="calc-card" style={{ marginTop: 16, maxWidth: 900 }}>
-        <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 12, color: "#14532d" }}>LH Calculator</div>
-        <p style={{ marginTop: 0, marginBottom: 14, opacity: 0.85 }}>
-          Open the complete calculator suite for day-to-day lab workflows.
-        </p>
+        <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 12 }}>LH Calculator</div>
         <Link href="/calculator" className="btn-primary" style={{ textDecoration: "none" }}>
           Open LH Calculator
         </Link>

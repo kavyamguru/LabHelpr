@@ -126,9 +126,9 @@ body::after {
 .brand-mark-wrap {
   width: 64px;
   height: 64px;
-  border-radius: 14px;
+  border-radius: 999px;
   overflow: hidden;
-  border: 1px solid #cfe0d8;
+  border: 1px solid #cfd8d3;
   background: #f4f8f5;
   flex-shrink: 0;
 }
@@ -136,9 +136,9 @@ body::after {
 .brand-mark {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 24%;
-  transform: scale(1.22);
+  object-fit: contain;
+  object-position: center;
+  transform: none;
   filter: saturate(0.72) contrast(0.94) brightness(1.02);
 }
 
@@ -190,8 +190,8 @@ body::after {
 }
 
 .dark body {
-  color: #e6edf6;
-  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  color: #e5e7eb;
+  background: linear-gradient(180deg, #111111 0%, #171717 100%);
 }
 
 .dark body::before,
@@ -199,16 +199,16 @@ body::after {
   content: none;
 }
 
-.dark .calc-page h1 { color: #e2efff; }
-.dark .calc-page p { color: #b5cadf; }
+.dark .calc-page h1 { color: #f3f4f6; }
+.dark .calc-page p { color: #d1d5db; }
 
 .dark .calc-page input,
 .dark .calc-page select,
 .dark .calc-page button,
 .dark .calc-page textarea {
-  border: 1px solid rgba(69, 104, 143, 0.9);
-  background: rgba(8, 24, 40, 0.76);
-  color: #dbeafe;
+  border: 1px solid #3f3f46;
+  background: #1f1f1f;
+  color: #f3f4f6;
 }
 
 .dark .calc-page button {
@@ -223,25 +223,25 @@ body::after {
 }
 
 .dark .calc-page table {
-  background: rgba(8, 25, 42, 0.82);
-  border: 1px solid rgba(69, 104, 143, 0.9);
+  background: #1a1a1a;
+  border: 1px solid #3f3f46;
 }
 
 .dark .calc-page th {
-  background: linear-gradient(90deg, #0f2f4d 0%, #123b5b 100%);
-  color: #d8ecff;
+  background: #262626;
+  color: #f3f4f6;
 }
 
 .dark .calc-card {
-  background: #111827;
-  border: 1px solid #334155;
-  color: #e2e8f0;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  color: #f3f4f6;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
 }
 
 .dark .brand-mark-wrap {
-  border-color: #334155;
-  background: #0f172a;
+  border-color: #52525b;
+  background: #121212;
 }
 
 .dark .brand-mark {
@@ -255,17 +255,17 @@ body::after {
 }
 
 .dark .theme-toggle {
-  border-color: rgba(69, 104, 143, 0.9);
-  background: rgba(8, 24, 40, 0.8);
+  border-color: #3f3f46;
+  background: #1a1a1a;
 }
 
 .dark .theme-toggle button {
-  color: #bfe7ff;
+  color: #e5e7eb;
 }
 
 .dark .theme-toggle button[data-active="true"] {
-  background: linear-gradient(135deg, #143252 0%, #1a4267 100%);
-  border-color: #3e6e99;
+  background: #27272a;
+  border-color: #52525b;
 }
 
 @media (max-width: 768px) {
