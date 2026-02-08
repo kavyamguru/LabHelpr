@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const tools = [
@@ -16,7 +17,13 @@ const tools = [
 export default function CalculatorPage() {
   return (
     <main className="calc-page">
-      <h1>LH Calculator</h1>
+      <header className="calc-card" style={{ display: "flex", alignItems: "center", gap: 12, maxWidth: 900 }}>
+        <Image src="/labhelpr-logo.png" alt="LabHelpr logo" width={44} height={44} style={{ borderRadius: 10 }} />
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 24, lineHeight: 1.15 }}>LabHelpr</div>
+          <div style={{ opacity: 0.8, fontSize: 14 }}>LH Calculator</div>
+        </div>
+      </header>
 
       <section className="calc-grid" style={{ marginTop: 16 }}>
         {tools.map((tool) => (

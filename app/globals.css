@@ -17,7 +17,7 @@ body {
   font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(180deg, #f8fbff 0%, #eff5fb 100%);
+  background: linear-gradient(180deg, #f8fbf8 0%, #edf5ef 100%);
 }
 
 body::before,
@@ -110,13 +110,13 @@ body::after {
 
 .btn-primary {
   display: inline-block;
-  border: 1px solid #0f5e8f;
+  border: 1px solid #166534;
   border-radius: 10px;
   padding: 10px 14px;
   font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #0b5c8f 0%, #0f766e 100%);
-  box-shadow: 0 8px 18px rgba(11, 92, 143, 0.28);
+  background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+  box-shadow: 0 8px 18px rgba(21, 128, 61, 0.26);
 }
 
 .btn-primary:hover {

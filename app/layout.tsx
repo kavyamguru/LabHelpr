@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   title: "LH Calculator",
   description: "Bench-friendly calculators for lab workflows.",
   icons: {
-    icon: "/logo-lh-mark.svg",
-    shortcut: "/logo-lh-mark.svg",
-    apple: "/logo-lh-mark.svg",
+    icon: "/labhelpr-logo.png",
+    shortcut: "/labhelpr-logo.png",
+    apple: "/labhelpr-logo.png",
   },
 };
 
