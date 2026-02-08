@@ -6,17 +6,17 @@ export default function Home() {
     <main className="calc-page" style={{ minHeight: "100vh" }}>
       <header className="calc-card" style={{ maxWidth: 900 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Image
-            src="/labhelpr-logo.png"
-            alt="LabHelpr logo"
-            width={64}
-            height={64}
-            priority
-            style={{ borderRadius: 12 }}
-          />
-          <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", color: "#1f2937" }}>
-            LabHelpr
+          <div className="brand-mark-wrap" aria-label="LabHelpr mark">
+            <Image
+              src="/labhelpr-logo.png"
+              alt="LabHelpr logo mark"
+              width={1024}
+              height={1024}
+              priority
+              className="brand-mark"
+            />
           </div>
+          <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em" }}>LabHelpr</div>
         </div>
       </header>
 

@@ -18,7 +18,15 @@ export default function CalculatorPage() {
   return (
     <main className="calc-page">
       <header className="calc-card" style={{ display: "flex", alignItems: "center", gap: 12, maxWidth: 900 }}>
-        <Image src="/labhelpr-logo.png" alt="LabHelpr logo" width={44} height={44} style={{ borderRadius: 10 }} />
+        <div className="brand-mark-wrap" aria-label="LabHelpr mark">
+          <Image
+            src="/labhelpr-logo.png"
+            alt="LabHelpr logo mark"
+            width={1024}
+            height={1024}
+            className="brand-mark"
+          />
+        </div>
         <div>
           <div style={{ fontWeight: 800, fontSize: 24, lineHeight: 1.15 }}>LabHelpr</div>
           <div style={{ opacity: 0.8, fontSize: 14 }}>LH Calculator</div>
