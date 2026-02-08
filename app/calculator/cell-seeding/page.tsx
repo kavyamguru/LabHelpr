@@ -382,22 +382,30 @@ export default function CellSeedingPage() {
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <label style={{ width: 230 }}>Plate treatment setup</label>
-          <label>
-            <input type="checkbox" checked={useTreatments} onChange={(e) => setUseTreatments(e.target.checked)} /> Use treatment groups
-          </label>
-          {useTreatments ? (
-            <label>
-              <input
-                type="checkbox"
-                checked={assignByWellIds}
-                onChange={(e) => setAssignByWellIds(e.target.checked)}
-                disabled={preset === "custom"}
-              />{" "}
-              Assign by exact well IDs ({preset === "custom" ? "requires standard plate format" : "A1, A2, B1-B3"})
-            </label>
-          ) : null}
+          <label style={{ width: 230 }}>Experiment design</label>
+          <select
+            value={useTreatments ? "treatment-groups" : "single-condition"}
+            onChange={(e) => setUseTreatments(e.target.value === "treatment-groups")}
+          >
+            <option value="single-condition">Single condition (same seeding for all wells)</option>
+            <option value="treatment-groups">Treatment groups (different well sets/targets)</option>
+          </select>
         </div>
+
+        {useTreatments ? (
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <label style={{ width: 230 }}>Treatment assignment mode</label>
+            <select
+              value={assignByWellIds ? "well-map" : "well-count"}
+              onChange={(e) => setAssignByWellIds(e.target.value === "well-map")}
+              disabled={preset === "custom"}
+            >
+              <option value="well-count">By number of wells per treatment</option>
+              <option value="well-map">By exact well map (A1, B2, C1-C3)</option>
+            </select>
+            {preset === "custom" ? <span style={{ fontSize: 12, opacity: 0.75 }}>Well-map mode requires a standard plate format.</span> : null}
+          </div>
+        ) : null}
 
         {!useTreatments ? (
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
