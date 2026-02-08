@@ -1,56 +1,26 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
   return (
     <main className="calc-page" style={{ minHeight: "100vh" }}>
-      <header
-        className="calc-card"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          maxWidth: 520,
-        }}
-      >
-        <div
-          aria-label="LH logo"
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 12,
-            display: "grid",
-            placeItems: "center",
-            fontWeight: 900,
-            letterSpacing: "0.02em",
-            fontSize: 22,
-            color: "#ffffff",
-            background: "linear-gradient(135deg, #0f172a 0%, #0f766e 100%)",
-            flexShrink: 0,
-          }}
-        >
-          LH
-        </div>
-
-        <div style={{ display: "grid", gap: 2 }}>
-          <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.1 }}>LabHelpr</div>
-        </div>
+      <header className="calc-card" style={{ maxWidth: 880, padding: 22 }}>
+        <Image
+          src="/logo-labhelpr-pro.svg"
+          alt="LabHelpr"
+          width={1000}
+          height={230}
+          priority
+          style={{ width: "100%", height: "auto" }}
+        />
       </header>
 
-      <section className="calc-card" style={{ marginTop: 16, maxWidth: 520 }}>
-        <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 10 }}>LH Calculator</div>
-        <Link
-          href="/calculator"
-          style={{
-            display: "inline-block",
-            textDecoration: "none",
-            fontWeight: 700,
-            padding: "10px 14px",
-            borderRadius: 10,
-            border: "1px solid #9cc3ea",
-            background: "#ffffff",
-            color: "#0f2742",
-          }}
-        >
+      <section className="calc-card" style={{ marginTop: 16, maxWidth: 880 }}>
+        <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 12 }}>LH Calculator</div>
+        <p style={{ marginTop: 0, marginBottom: 14, opacity: 0.85 }}>
+          Open the complete calculator suite for dilution, molarity, centrifuge, PCR mix, OD600 and more.
+        </p>
+        <Link href="/calculator" className="btn-primary" style={{ textDecoration: "none" }}>
           Open LH Calculator
         </Link>
       </section>

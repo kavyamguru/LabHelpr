@@ -17,41 +17,12 @@ body {
   font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
   min-height: 100vh;
   position: relative;
-  background:
-    radial-gradient(980px 440px at 8% -8%, rgba(2, 132, 199, 0.2), transparent 62%),
-    radial-gradient(960px 430px at 102% -15%, rgba(20, 184, 166, 0.18), transparent 62%),
-    radial-gradient(980px 420px at 50% 110%, rgba(59, 130, 246, 0.1), transparent 60%),
-    linear-gradient(180deg, #f7fbff 0%, #eef5fd 52%, #e9f1fa 100%);
-  background-attachment: fixed;
+  background: linear-gradient(180deg, #f8fbff 0%, #eff5fb 100%);
 }
 
-/* Professional scientific stencil layer */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.14;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='760' height='460' viewBox='0 0 760 460'%3E%3Cg fill='none' stroke='%230b5f74' stroke-width='1.55' opacity='0.56'%3E%3Cpath d='M62 58 h78'/%3E%3Cpath d='M101 26 v62'/%3E%3Cellipse cx='101' cy='58' rx='37' ry='13'/%3E%3Cpath d='M252 34 C296 61 296 98 252 125 C208 152 208 189 252 216 C296 243 296 280 252 307 C208 334 208 371 252 398'/%3E%3Cpath d='M300 34 C256 61 256 98 300 125 C344 152 344 189 300 216 C256 243 256 280 300 307 C344 334 344 371 300 398'/%3E%3Cpath d='M254 52 h44 M260 72 h32 M264 92 h24 M267 112 h18 M267 142 h18 M264 162 h24 M260 182 h32 M254 202 h44 M260 222 h32 M264 242 h24 M267 262 h18 M267 292 h18 M264 312 h24 M260 332 h32 M254 352 h44 M260 372 h32'/%3E%3Cpath d='M382 80 l17 -10 l17 10 v20 l-17 10 l-17 -10z'/%3E%3Cpath d='M416 80 l17 -10 l17 10 v20 l-17 10 l-17 -10z'/%3E%3Cpath d='M450 80 l17 -10 l17 10 v20 l-17 10 l-17 -10z'/%3E%3Cpath d='M395 144 h96'/%3E%3Cpath d='M482 140 l10 4 l-10 4'/%3E%3Ctext x='392' y='130' fill='%230b5f74' font-size='12' font-family='Arial'%3Eenzyme step%3C/text%3E%3Ctext x='390' y='172' fill='%230b5f74' font-size='13' font-family='Arial'%3EATP + H2O %E2%86%92 ADP + Pi%3C/text%3E%3Crect x='560' y='46' width='32' height='94' rx='11'/%3E%3Cpath d='M565 92 h22 M565 108 h22 M554 148 q22 19 44 0'/%3E%3Cpath d='M650 58 c14 20 14 42 0 62 c-14 -20 -14 -42 0 -62z'/%3E%3Cpath d='M650 122 v30'/%3E%3Cpath d='M632 142 q18 -10 36 0'/%3E%3Ctext x='64' y='244' fill='%230b5f74' font-size='13' font-family='Arial'%3ECH3COOH%3C/text%3E%3Ctext x='64' y='264' fill='%230b5f74' font-size='13' font-family='Arial'%3EC6H12O6%3C/text%3E%3Ctext x='64' y='284' fill='%230b5f74' font-size='13' font-family='Arial'%3ENaCl%3C/text%3E%3Ctext x='64' y='304' fill='%230b5f74' font-size='13' font-family='Arial'%3ERNA%3C/text%3E%3C/g%3E%3C/svg%3E");
-  background-size: 760px 460px;
-  animation: lab-pattern-drift 44s linear infinite;
-}
-
+body::before,
 body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.42), transparent 36%),
-    radial-gradient(circle at 86% 68%, rgba(255, 255, 255, 0.28), transparent 38%);
-}
-
-@keyframes lab-pattern-drift {
-  0% { background-position: 0 0; }
-  100% { background-position: 760px 460px; }
+  content: none;
 }
 
 .calc-page {
@@ -123,18 +94,33 @@ body::after {
 }
 
 .calc-card {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(238, 247, 255, 0.86) 100%);
-  border: 1px solid rgba(181, 205, 233, 0.95);
-  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #d5e4f2;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 14px 28px rgba(23, 64, 115, 0.12);
+  box-shadow: 0 8px 20px rgba(15, 39, 66, 0.08);
   color: #12263a;
-  transition: transform 0.2s ease, box-shadow 0.24s ease;
+  transition: transform 0.16s ease, box-shadow 0.2s ease;
 }
 
 .calc-card:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 20px 36px rgba(23, 64, 115, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 39, 66, 0.12);
+}
+
+.btn-primary {
+  display: inline-block;
+  border: 1px solid #0f5e8f;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0b5c8f 0%, #0f766e 100%);
+  box-shadow: 0 8px 18px rgba(11, 92, 143, 0.28);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.03);
 }
 
 .calc-grid {
