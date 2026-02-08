@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LabHelpr",
-  description: "Research-first calculators and tools for experimental workflows.",
+  title: "LH Calculator",
+  description: "Bench-friendly calculators for lab workflows.",
   icons: {
     icon: "/logo-labhelpr-mark.svg",
     shortcut: "/logo-labhelpr-mark.svg",

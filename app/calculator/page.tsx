@@ -16,13 +16,9 @@ const tools = [
 export default function CalculatorPage() {
   return (
     <main className="calc-page">
-      <span className="badge">Calculator v1.0 • Release Candidate</span>
-      <h1 style={{ marginTop: 10 }}>LabHelpr Calculator Suite</h1>
-      <p style={{ marginBottom: 16, opacity: 0.85 }}>
-        Fast, bench-friendly calculators with clear outputs for daily lab workflows.
-      </p>
+      <h1>LH Calculator</h1>
 
-      <section className="calc-grid">
+      <section className="calc-grid" style={{ marginTop: 16 }}>
         {tools.map((tool) => (
           <Link key={tool.href} href={tool.href} className="calc-card" style={{ textDecoration: "none" }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>{tool.title}</div>
@@ -30,14 +26,6 @@ export default function CalculatorPage() {
           </Link>
         ))}
       </section>
-
-      <div className="calc-card" style={{ marginTop: 16 }}>
-        <div style={{ fontWeight: 700 }}>Feedback loop for v1</div>
-        <p style={{ marginTop: 6, fontSize: 14, opacity: 0.8 }}>
-          Calculator is now in release mode. Only bug fixes and UX refinements will be made based on user feedback.
-        </p>
-        <a href="https://forms.office.com/r/TMKSjrwFCh" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700 }}>Send calculator feedback →</a>
-      </div>
     </main>
   );
 }
