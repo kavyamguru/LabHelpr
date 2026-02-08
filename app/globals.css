@@ -191,7 +191,10 @@ body::after {
 
 .dark body {
   color: #e5e7eb;
-  background: linear-gradient(180deg, #111111 0%, #171717 100%);
+  background:
+    radial-gradient(1200px 520px at 8% -10%, rgba(34, 197, 94, 0.12), transparent 62%),
+    radial-gradient(900px 460px at 100% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
+    linear-gradient(180deg, #0f1110 0%, #141614 100%);
 }
 
 .dark body::before,

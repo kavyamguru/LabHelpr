@@ -21,9 +21,8 @@ export default function Home() {
       </header>
 
       <section className="calc-card" style={{ marginTop: 16, maxWidth: 900 }}>
-        <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 12 }}>LH Calculator</div>
         <Link href="/calculator" className="btn-primary" style={{ textDecoration: "none" }}>
-          Open LH Calculator
+          LH Calculator
         </Link>
       </section>
     </main>
