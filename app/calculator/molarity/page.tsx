@@ -34,9 +34,10 @@ function fromM(valueM: number, unit: ConcUnit) {
 export default function MolarityPage() {
   const [mode, setMode] = useState<"mass-needed" | "conc-from-mass">("mass-needed");
 
-  // Inputs (independent)
-  const [formula, setFormula] = useState<string>("");  // optional
-  const [mwManual, setMwManual] = useState<number>(0); // optional, no auto-fill
+  // Inputs
+  const [formula, setFormula] = useState<string>("");
+  const [mwManual, setMwManual] = useState<number>(0);
+  const [formulaError, setFormulaError] = useState<string>("");
 
   // Common inputs
   const [vol, setVol] = useState<number>(1);
@@ -50,23 +51,7 @@ export default function MolarityPage() {
   const [massG, setMassG] = useState<number>(1);
   const [outConcUnit, setOutConcUnit] = useState<ConcUnit>("mM");
 
-  // Compute MW from formula (only if formula entered)
-  const mwFromFormula = useMemo(() => {
-    const f = formula.trim();
-    if (!f) return null;
-    return molecularWeightFromFormula(f);
-  }, [formula]);
-
-  // Decide MW:
-  // - if manual MW > 0 => use it
-  // - else if formula valid => use computed MW
-  // - else 0
-  const MW = useMemo(() => {
-    const manual = Number(mwManual) || 0;
-    if (manual > 0) return manual;
-    if (mwFromFormula && mwFromFormula.ok) return mwFromFormula.mw_g_per_mol;
-    return 0;
-  }, [mwManual, mwFromFormula]);
+  const MW = Number(mwManual) || 0;
 
   const result = useMemo(() => {
     const V_L = (Number(vol) || 0) * VOL_TO_L[volUnit];
@@ -120,28 +105,39 @@ export default function MolarityPage() {
       </div>
 
       <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
-        {/* Formula + inline computed MW */}
+        {/* Formula input: updates MW field directly */}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 170 }}>Formula (optional)</label>
 
           <input
             value={formula}
-            onChange={(e) => setFormula(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormula(value);
+
+              const trimmed = value.trim();
+              if (!trimmed) {
+                setFormulaError("");
+                return;
+              }
+
+              const parsed = molecularWeightFromFormula(trimmed);
+              if (parsed.ok) {
+                setMwManual(Number(parsed.mw_g_per_mol.toFixed(4)));
+                setFormulaError("");
+              } else {
+                setFormulaError(parsed.error);
+              }
+            }}
             placeholder="e.g., NaCl, Ca(OH)2, MgSO4·7H2O"
             style={{ padding: 8, width: 260 }}
           />
 
-          {formula.trim() && mwFromFormula && mwFromFormula.ok && (
-            <span style={{ fontSize: 12, opacity: 0.7 }}>
-              MW: <strong>{fmt(mwFromFormula.mw_g_per_mol, 4)}</strong> g/mol
-            </span>
-          )}
-
-          {formula.trim() && mwFromFormula && !mwFromFormula.ok && (
+          {formulaError ? (
             <span style={{ color: "#475569", fontSize: 12 }}>
-              <strong>Error:</strong> {mwFromFormula.error}
+              <strong>Error:</strong> {formulaError}
             </span>
-          )}
+          ) : null}
         </div>
 
         {/* Manual MW input */}
@@ -151,14 +147,15 @@ export default function MolarityPage() {
             type="number"
             onFocus={(e) => e.currentTarget.select()}
             value={mwManual}
-            onChange={(e) => setMwManual(Number(e.target.value))}
+            onChange={(e) => {
+              setMwManual(Number(e.target.value));
+              setFormula("");
+              setFormulaError("");
+            }}
             placeholder="Enter MW if known"
             style={{ padding: 8, width: 160 }}
             min={0}
           />
-          <span style={{ fontSize: 12, opacity: 0.7 }}>
-            If MW is 0, we’ll use MW from formula (if valid).
-          </span>
         </div>
 
         {/* Volume */}
