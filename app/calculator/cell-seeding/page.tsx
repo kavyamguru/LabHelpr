@@ -312,7 +312,8 @@ export default function CellSeedingPage() {
     <main className="calc-page">
       <h1>Mammalian Cell Seeding</h1>
       <p style={{ opacity: 0.85 }}>
-        Plan per-well seeding volume and full-plate dilution/mix from your measured cells/mL and target cells/well.
+        Enter your measured cell concentration and target cells per well to get a clear seeding plan:
+        per-well pipetting volumes, total plate mix volume, and dilution guidance.
       </p>
 
       <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
@@ -556,7 +557,7 @@ export default function CellSeedingPage() {
 
       <section className="calc-card" style={{ marginTop: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-          <div style={{ fontWeight: 800 }}>Additional substances per well</div>
+          <div style={{ fontWeight: 800 }}>Additional substances (per well)</div>
           <button
             type="button"
             onClick={() =>
@@ -571,7 +572,7 @@ export default function CellSeedingPage() {
         </div>
 
         {additives.length === 0 ? (
-          <p style={{ marginTop: 8, opacity: 0.8 }}>Add cell suspension additives (e.g., antibiotic, nutrient, compound) to calculate per-well and total volumes.</p>
+          <p style={{ marginTop: 8, opacity: 0.8 }}>Add any extra components (e.g., antibiotic, nutrient, drug/compound). We calculate required volume per well and total volume for the full plate.</p>
         ) : (
           <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
             {additives.map((a, idx) => {
@@ -687,19 +688,19 @@ export default function CellSeedingPage() {
       ) : result.mode === "single" ? (
         <>
           <section className="calc-card" style={{ marginTop: 18 }}>
-            <div style={{ fontWeight: 800, marginBottom: 8 }}>Per-well volume from measured stock</div>
+            <div style={{ fontWeight: 800, marginBottom: 8 }}>Per-well pipetting plan</div>
             <div>
               Add <strong>{fmt(fromUL(result.plan.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> cell suspension + <strong>{fmt(fromUL(additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> additives + <strong>{fmt(fromUL(result.plan.mediaPerWellUL - additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> base media per well.
             </div>
             {result.plan.mediaPerWellUL < 0 || result.plan.mediaPerWellUL - additivePerWellUL < 0 ? (
               <p style={{ marginTop: 8, color: "#64748b" }}>
-                Total required volumes exceed selected well volume. Lower target/additives or increase dispense volume.
+                The summed volumes are greater than your selected well volume. Reduce target cells/additives, or increase dispense volume per well.
               </p>
             ) : null}
           </section>
 
           <section className="calc-card" style={{ marginTop: 14 }}>
-            <div style={{ fontWeight: 800, marginBottom: 8 }}>Whole-plate seeding mix</div>
+            <div style={{ fontWeight: 800, marginBottom: 8 }}>Whole-plate mix plan</div>
             <div>Target mix concentration: <strong>{fmt(result.plan.targetMixCellsPerMl, 0)} cells/mL</strong></div>
             <div style={{ marginTop: 4 }}>Total dispense volume: <strong>{fmt(fromUL(result.plan.totalDispenseUL, dispenseUnit), 2)} {dispenseUnit}</strong></div>
             <div style={{ marginTop: 4 }}>Total additives volume: <strong>{fmt(fromUL(additiveTotalUL, dispenseUnit), 2)} {dispenseUnit}</strong></div>
@@ -712,14 +713,14 @@ export default function CellSeedingPage() {
               </div>
             ) : (
               <p style={{ marginTop: 8, color: "#64748b" }}>
-                Stock concentration is below target mix concentration. You cannot reach this target by dilution alone.
+                Stock concentration is lower than the required mix concentration, so this target cannot be reached by dilution alone.
               </p>
             )}
           </section>
         </>
       ) : (
         <section className="calc-card" style={{ marginTop: 18 }}>
-          <div style={{ fontWeight: 800, marginBottom: 8 }}>Treatment-wise seeding plan</div>
+          <div style={{ fontWeight: 800, marginBottom: 8 }}>Treatment-wise plate plan</div>
           <div style={{ marginBottom: 8 }}>
             Assigned wells: <strong>{result.assignedWells}</strong> / <strong>{result.wells}</strong>
             {result.assignedWells !== result.wells ? (
