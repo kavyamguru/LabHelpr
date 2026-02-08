@@ -12,6 +12,7 @@ const tools = [
   { href: "/calculator/stock-prep", title: "Stock Preparation" },
   { href: "/calculator/od600", title: "OD600" },
   { href: "/calculator/molecular-weight", title: "Molecular Weight" },
+  { href: "/calculator/cell-seeding", title: "Mammalian Cell Seeding" },
 ];
 
 export default function CalculatorPage() {
