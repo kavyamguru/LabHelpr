@@ -13,6 +13,16 @@ type TreatmentGroup = {
   targetCellsPerWell: string;
 };
 
+type AdditiveMode = "percent" | "stock";
+type Additive = {
+  name: string;
+  mode: AdditiveMode;
+  percent: string;
+  stockConc: string;
+  targetConc: string;
+  unitLabel: string;
+};
+
 const PRESETS: Record<Exclude<PlatePreset, "custom">, { wells: number; wellVolumeUL: number; rows: number; cols: number }> = {
   "6-well": { wells: 6, wellVolumeUL: 2000, rows: 2, cols: 3 },
   "12-well": { wells: 12, wellVolumeUL: 1000, rows: 3, cols: 4 },
@@ -147,6 +157,8 @@ export default function CellSeedingPage() {
     { name: "Treatment 3", wells: "8", wellIds: "C5-C6,D1-D6", targetCellsPerWell: "50000" },
   ]);
 
+  const [additives, setAdditives] = useState<Additive[]>([]);
+
   const activePreset = preset === "custom" ? null : PRESETS[preset];
 
   const plateRows = activePreset?.rows ?? 0;
@@ -256,6 +268,41 @@ export default function CellSeedingPage() {
   }, [measuredCellsPerMl, wellsToSeed, dispenseVol, dispenseUnit, overagePercent, useTreatments, targetCellsPerWell, groups, assignByWellIds, preset]);
 
   const invalid = !result;
+
+  const additivePlans = useMemo(() => {
+    const vWellInput = Number(dispenseVol) || 0;
+    const vWellUL = vWellInput * VOL_TO_UL[dispenseUnit];
+    const wells = Number(wellsToSeed) || 0;
+    if (vWellUL <= 0 || wells <= 0) return [];
+
+    return additives.map((a) => {
+      const name = a.name.trim() || "Substance";
+      if (a.mode === "percent") {
+        const pct = Number(a.percent) || 0;
+        const perWellUL = (vWellUL * pct) / 100;
+        return {
+          name,
+          mode: a.mode,
+          detail: `${fmt(pct, 3)}% v/v`,
+          perWellUL,
+          totalUL: perWellUL * wells,
+          valid: pct >= 0,
+        };
+      }
+
+      const stock = Number(a.stockConc) || 0;
+      const target = Number(a.targetConc) || 0;
+      const perWellUL = stock > 0 ? (vWellUL * target) / stock : NaN;
+      return {
+        name,
+        mode: a.mode,
+        detail: `${fmt(target, 3)} ${a.unitLabel || "unit"} from ${fmt(stock, 3)} ${a.unitLabel || "unit"} stock`,
+        perWellUL,
+        totalUL: perWellUL * wells,
+        valid: stock > 0 && target >= 0 && target <= stock,
+      };
+    });
+  }, [additives, dispenseVol, dispenseUnit, wellsToSeed]);
 
   return (
     <main className="calc-page">
@@ -502,6 +549,134 @@ export default function CellSeedingPage() {
           </section>
         )}
       </div>
+
+      <section className="calc-card" style={{ marginTop: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ fontWeight: 800 }}>Additional substances per well</div>
+          <button
+            type="button"
+            onClick={() =>
+              setAdditives((prev) => [
+                ...prev,
+                { name: `Substance ${prev.length + 1}`, mode: "percent", percent: "", stockConc: "", targetConc: "", unitLabel: "µg/mL" },
+              ])
+            }
+          >
+            + Add substance
+          </button>
+        </div>
+
+        {additives.length === 0 ? (
+          <p style={{ marginTop: 8, opacity: 0.8 }}>Add cell suspension additives (e.g., antibiotic, nutrient, compound) to calculate per-well and total volumes.</p>
+        ) : (
+          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+            {additives.map((a, idx) => {
+              const plan = additivePlans[idx];
+              return (
+                <div key={idx} style={{ border: "1px solid #dbe4ea", borderRadius: 12, padding: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 8 }}>
+                    <input
+                      value={a.name}
+                      onChange={(e) => {
+                        const next = [...additives];
+                        next[idx] = { ...next[idx], name: e.target.value };
+                        setAdditives(next);
+                      }}
+                      placeholder="Substance name"
+                    />
+                    <button type="button" onClick={() => setAdditives((prev) => prev.filter((_, i) => i !== idx))}>Remove</button>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <label>Mode</label>
+                    <select
+                      value={a.mode}
+                      onChange={(e) => {
+                        const next = [...additives];
+                        next[idx] = { ...next[idx], mode: e.target.value as AdditiveMode };
+                        setAdditives(next);
+                      }}
+                    >
+                      <option value="percent">% v/v of well volume</option>
+                      <option value="stock">Target concentration from stock</option>
+                    </select>
+
+                    {a.mode === "percent" ? (
+                      <>
+                        <label>Percent</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          onFocus={(e) => e.currentTarget.select()}
+                          value={a.percent}
+                          onChange={(e) => {
+                            const next = [...additives];
+                            next[idx] = { ...next[idx], percent: e.target.value };
+                            setAdditives(next);
+                          }}
+                          style={{ width: 100 }}
+                        />
+                        <span>%</span>
+                      </>
+                    ) : (
+                      <>
+                        <label>Target</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          onFocus={(e) => e.currentTarget.select()}
+                          value={a.targetConc}
+                          onChange={(e) => {
+                            const next = [...additives];
+                            next[idx] = { ...next[idx], targetConc: e.target.value };
+                            setAdditives(next);
+                          }}
+                          style={{ width: 100 }}
+                        />
+                        <label>Stock</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          onFocus={(e) => e.currentTarget.select()}
+                          value={a.stockConc}
+                          onChange={(e) => {
+                            const next = [...additives];
+                            next[idx] = { ...next[idx], stockConc: e.target.value };
+                            setAdditives(next);
+                          }}
+                          style={{ width: 100 }}
+                        />
+                        <input
+                          value={a.unitLabel}
+                          onChange={(e) => {
+                            const next = [...additives];
+                            next[idx] = { ...next[idx], unitLabel: e.target.value };
+                            setAdditives(next);
+                          }}
+                          placeholder="unit"
+                          style={{ width: 90 }}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {plan ? (
+                    <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
+                      {plan.valid ? (
+                        <>
+                          {plan.detail}: <strong>{fmt(fromUL(plan.perWellUL, dispenseUnit), 3)} {dispenseUnit}</strong> per well, total <strong>{fmt(fromUL(plan.totalUL, dispenseUnit), 3)} {dispenseUnit}</strong>.
+                        </>
+                      ) : (
+                        <span style={{ color: "#64748b" }}>Check values for this substance (stock must be ≥ target).</span>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {invalid ? (
         <p style={{ marginTop: 16, color: "#64748b" }}>Enter positive values to generate a seeding plan.</p>
