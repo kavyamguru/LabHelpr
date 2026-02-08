@@ -85,7 +85,8 @@ export default function CellSeedingPage() {
     <main className="calc-page">
       <h1>Mammalian Cell Seeding</h1>
       <p style={{ opacity: 0.85 }}>
-        Plan seeding from measured cell concentration with bench-ready outputs for per-well pipetting and full-plate seeding mix.
+        User-requested feature for mammalian tissue-culture workflows: enter your measured cells/mL and target cells/well,
+        then get clear per-well seeding volume and full-plate dilution/mix instructions for common plate formats.
       </p>
 
       <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
@@ -114,30 +115,30 @@ export default function CellSeedingPage() {
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Number of wells to seed</label>
-          <input type="number" value={wellsToSeed} onChange={(e) => setWellsToSeed(Number(e.target.value))} style={{ width: 160 }} />
+          <input type="number" onFocus={(e) => e.currentTarget.select()} value={wellsToSeed} onChange={(e) => setWellsToSeed(Number(e.target.value))} style={{ width: 160 }} />
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Dispense volume per well</label>
-          <input type="number" value={dispenseUL} onChange={(e) => setDispenseUL(Number(e.target.value))} style={{ width: 160 }} />
+          <input type="number" onFocus={(e) => e.currentTarget.select()} value={dispenseUL} onChange={(e) => setDispenseUL(Number(e.target.value))} style={{ width: 160 }} />
           <span>µL</span>
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Measured cell concentration</label>
-          <input type="number" value={measuredCellsPerMl} onChange={(e) => setMeasuredCellsPerMl(Number(e.target.value))} style={{ width: 200 }} />
+          <input type="number" onFocus={(e) => e.currentTarget.select()} value={measuredCellsPerMl} onChange={(e) => setMeasuredCellsPerMl(Number(e.target.value))} style={{ width: 200 }} />
           <span>cells/mL</span>
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Target seeding density</label>
-          <input type="number" value={targetCellsPerWell} onChange={(e) => setTargetCellsPerWell(Number(e.target.value))} style={{ width: 200 }} />
+          <input type="number" onFocus={(e) => e.currentTarget.select()} value={targetCellsPerWell} onChange={(e) => setTargetCellsPerWell(Number(e.target.value))} style={{ width: 200 }} />
           <span>cells/well</span>
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ width: 230 }}>Extra mix (dead volume)</label>
-          <input type="number" value={overagePercent} onChange={(e) => setOveragePercent(Number(e.target.value))} style={{ width: 120 }} />
+          <input type="number" onFocus={(e) => e.currentTarget.select()} value={overagePercent} onChange={(e) => setOveragePercent(Number(e.target.value))} style={{ width: 120 }} />
           <span>%</span>
         </div>
       </div>
