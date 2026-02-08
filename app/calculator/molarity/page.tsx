@@ -129,7 +129,7 @@ export default function MolarityPage() {
                 setFormulaError(parsed.error);
               }
             }}
-            placeholder="e.g., NaCl, Ca(OH)2, MgSO4·7H2O"
+            placeholder="e.g., NaCl, Ca(OH)2, K3[Fe(CN)6], MgSO4·7H2O"
             style={{ padding: 8, width: 260 }}
           />
 
@@ -138,6 +138,10 @@ export default function MolarityPage() {
               <strong>Error:</strong> {formulaError}
             </span>
           ) : null}
+        </div>
+
+        <div style={{ marginTop: -4, marginLeft: 170, fontSize: 12, opacity: 0.72 }}>
+          Examples: NaCl, Ca(OH)2, K3[Fe(CN)6], MgSO4·7H2O
         </div>
 
         {/* Manual MW input */}

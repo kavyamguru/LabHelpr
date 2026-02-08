@@ -17,7 +17,7 @@ export default function MolecularWeightPage() {
     <main className="calc-page">
       <h1>Molecular Weight</h1>
       <p style={{ opacity: 0.8 }}>
-        Enter a chemical formula to estimate molecular weight (g/mol). Supports (), [], {}, and hydrates (·).
+        Enter a chemical formula to estimate molecular weight (g/mol).
       </p>
 
       <div style={{ marginTop: 16, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
