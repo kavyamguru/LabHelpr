@@ -21,6 +21,10 @@ function fromMolar(M: number, unit: ConcUnit) {
   return M / CONC_TO_M[unit];
 }
 
+function fromUL(valueUL: number, unit: VolUnit) {
+  return valueUL / VOL_TO_UL[unit];
+}
+
 export default function SerialDilutionPage() {
   const [c0, setC0] = useState(10);
   const [c0Unit, setC0Unit] = useState<ConcUnit>("mM");
@@ -161,8 +165,8 @@ export default function SerialDilutionPage() {
         <>
           <div style={{ marginTop: 18 }}>
             <strong>Pipetting plan (per tube):</strong>{" "}
-            Transfer <strong>{fmt(plan.transfer_uL, 2)} µL</strong> from previous tube + add{" "}
-            <strong>{fmt(plan.diluent_uL, 2)} µL</strong> diluent (to reach {fmt(plan.Vfinal_uL, 2)} µL).
+            Transfer <strong>{fmt(fromUL(plan.transfer_uL, finalVolUnit), 2)} {finalVolUnit}</strong> from previous tube + add{" "}
+            <strong>{fmt(fromUL(plan.diluent_uL, finalVolUnit), 2)} {finalVolUnit}</strong> diluent (to reach {fmt(fromUL(plan.Vfinal_uL, finalVolUnit), 2)} {finalVolUnit}).
           </div>
 
           <div style={{ marginTop: 14, overflowX: "auto" }}>
@@ -192,8 +196,8 @@ export default function SerialDilutionPage() {
                         </>
                       ) : (
                         <>
-                          <td style={{ padding: 8 }}>{fmt(plan.transfer_uL, 2)} µL</td>
-                          <td style={{ padding: 8 }}>{fmt(plan.diluent_uL, 2)} µL</td>
+                          <td style={{ padding: 8 }}>{fmt(fromUL(plan.transfer_uL, finalVolUnit), 2)} {finalVolUnit}</td>
+                          <td style={{ padding: 8 }}>{fmt(fromUL(plan.diluent_uL, finalVolUnit), 2)} {finalVolUnit}</td>
                         </>
                       )}
                     </tr>
@@ -212,7 +216,7 @@ export default function SerialDilutionPage() {
       )}
 
       <CalcActions
-        copyText={!hasInvalid && plan ? `Serial Dilution\nTransfer per tube: ${plan.transfer_uL} µL\nDiluent per tube: ${plan.diluent_uL} µL` : undefined}
+        copyText={!hasInvalid && plan ? `Serial Dilution\nTransfer per tube: ${fromUL(plan.transfer_uL, finalVolUnit)} ${finalVolUnit}\nDiluent per tube: ${fromUL(plan.diluent_uL, finalVolUnit)} ${finalVolUnit}` : undefined}
       />
     </main>
   );
