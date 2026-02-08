@@ -24,10 +24,11 @@ export default function Home() {
         <Link href="/calculator" className="calc-launch" style={{ textDecoration: "none" }}>
           <div className="calc-launch-box" aria-hidden="true">
             <Image
-              src="/calculator-icon.avif"
+              src="/calculator-icon.png"
               alt="Calculator"
-              width={76}
-              height={76}
+              width={512}
+              height={512}
+              quality={100}
               className="calc-launch-icon"
             />
           </div>
