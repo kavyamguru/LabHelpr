@@ -24,7 +24,7 @@ export default function Home() {
         <Link href="/calculator" className="calc-launch" style={{ textDecoration: "none" }}>
           <div className="calc-launch-box" aria-hidden="true">
             <Image
-              src="/calculator-icon.png"
+              src="/calculator-icon.avif"
               alt="Calculator"
               width={76}
               height={76}
