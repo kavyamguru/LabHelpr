@@ -140,6 +140,7 @@ export default function CellSeedingPage() {
 
   const [useTreatments, setUseTreatments] = useState(false);
   const [assignByWellIds, setAssignByWellIds] = useState(false);
+  const [activeGroupIdx, setActiveGroupIdx] = useState(0);
   const [groups, setGroups] = useState<TreatmentGroup[]>([
     { name: "Treatment 1", wells: "8", wellIds: "A1-A6,B1-B2", targetCellsPerWell: "50000" },
     { name: "Treatment 2", wells: "8", wellIds: "B3-B6,C1-C4", targetCellsPerWell: "50000" },
@@ -147,6 +148,26 @@ export default function CellSeedingPage() {
   ]);
 
   const activePreset = preset === "custom" ? null : PRESETS[preset];
+
+  const plateRows = activePreset?.rows ?? 0;
+  const plateCols = activePreset?.cols ?? 0;
+  const allowedWellSet = activePreset ? buildAllowedWellSet(activePreset.rows, activePreset.cols) : null;
+
+  const selectedWellOwner = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!allowedWellSet) return map;
+
+    groups.forEach((g, gi) => {
+      const parsed = parseWellSelection(g.wellIds, allowedWellSet);
+      if (parsed.ok) {
+        parsed.wells.forEach((w) => {
+          if (!map.has(w)) map.set(w, gi);
+        });
+      }
+    });
+
+    return map;
+  }, [groups, allowedWellSet]);
 
   const result = useMemo(() => {
     const cStock = Number(measuredCellsPerMl) || 0;
@@ -169,7 +190,6 @@ export default function CellSeedingPage() {
       };
     }
 
-    const allowedWellSet = preset === "custom" ? null : buildAllowedWellSet(PRESETS[preset].rows, PRESETS[preset].cols);
     const globallyAssigned = new Set<string>();
 
     const groupPlans = groups.map((g) => {
@@ -322,6 +342,86 @@ export default function CellSeedingPage() {
         ) : (
           <section className="calc-card" style={{ marginTop: 4 }}>
             <div style={{ fontWeight: 800, marginBottom: 10 }}>Custom treatment groups</div>
+
+            {assignByWellIds && activePreset ? (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+                  <label style={{ width: 130 }}>Select wells for</label>
+                  <select value={activeGroupIdx} onChange={(e) => setActiveGroupIdx(Number(e.target.value))}>
+                    {groups.map((g, i) => (
+                      <option key={i} value={i}>{g.name || `Treatment ${i + 1}`}</option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: 12, opacity: 0.75 }}>Click wells to assign/unassign.</span>
+                </div>
+
+                <div style={{ display: "grid", gap: 6, width: "fit-content" }}>
+                  {Array.from({ length: plateRows }).map((_, r) => {
+                    const rowLabel = String.fromCharCode(65 + r);
+                    return (
+                      <div key={rowLabel} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <div style={{ width: 22, fontWeight: 700, opacity: 0.8 }}>{rowLabel}</div>
+                        {Array.from({ length: plateCols }).map((__, c) => {
+                          const well = `${rowLabel}${c + 1}`;
+                          const owner = selectedWellOwner.get(well);
+                          const isActive = owner === activeGroupIdx;
+                          const isTaken = owner !== undefined && owner !== activeGroupIdx;
+
+                          return (
+                            <button
+                              key={well}
+                              type="button"
+                              style={{
+                                minWidth: 42,
+                                padding: "6px 8px",
+                                fontSize: 12,
+                                borderRadius: 8,
+                                border: "1px solid",
+                                borderColor: isActive ? "#15803d" : isTaken ? "#64748b" : "#cbd5e1",
+                                background: isActive ? "#dcfce7" : isTaken ? "#e2e8f0" : "#ffffff",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                const wasActive = selectedWellOwner.get(well) === activeGroupIdx;
+
+                                setGroups((prev) => {
+                                  const next = [...prev];
+
+                                  // remove from all groups first (keeps unique ownership)
+                                  for (let gi = 0; gi < next.length; gi++) {
+                                    const tokens = next[gi].wellIds.split(/[\s,;]+/).filter(Boolean).map((t) => t.toUpperCase());
+                                    const cleaned = tokens.filter((t) => t !== well);
+                                    next[gi] = { ...next[gi], wellIds: cleaned.join(","), wells: String(cleaned.length) };
+                                  }
+
+                                  // if it was already in active group, this click unassigns it
+                                  if (wasActive) return next;
+
+                                  // otherwise assign to active group
+                                  const active = next[activeGroupIdx];
+                                  const activeTokens = active.wellIds.split(/[\s,;]+/).filter(Boolean).map((t) => t.toUpperCase());
+                                  const finalTokens = [...activeTokens, well];
+                                  next[activeGroupIdx] = {
+                                    ...active,
+                                    wellIds: finalTokens.join(","),
+                                    wells: String(finalTokens.length),
+                                  };
+
+                                  return next;
+                                });
+                              }}
+                            >
+                              {well}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
             <div style={{ display: "grid", gap: 10 }}>
               {groups.map((g, idx) => (
                 <div key={idx} style={{ display: "grid", gridTemplateColumns: assignByWellIds ? "1.1fr 1.3fr 1fr auto" : "1.2fr 0.8fr 1fr auto", gap: 8, alignItems: "center" }}>
@@ -342,7 +442,13 @@ export default function CellSeedingPage() {
                       value={g.wellIds}
                       onChange={(e) => {
                         const next = [...groups];
-                        next[idx] = { ...next[idx], wellIds: e.target.value };
+                        const raw = e.target.value;
+                        let count = Number(next[idx].wells) || 0;
+                        if (allowedWellSet) {
+                          const parsed = parseWellSelection(raw, allowedWellSet);
+                          if (parsed.ok) count = parsed.wells.length;
+                        }
+                        next[idx] = { ...next[idx], wellIds: raw, wells: String(count) };
                         setGroups(next);
                       }}
                       placeholder="e.g., A1-A6,B1-B2"
