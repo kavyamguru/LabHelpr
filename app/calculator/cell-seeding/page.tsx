@@ -304,6 +304,10 @@ export default function CellSeedingPage() {
     });
   }, [additives, dispenseVol, dispenseUnit, wellsToSeed]);
 
+  const validAdditivePlans = additivePlans.filter((a) => a.valid && Number.isFinite(a.perWellUL));
+  const additivePerWellUL = validAdditivePlans.reduce((s, a) => s + a.perWellUL, 0);
+  const additiveTotalUL = validAdditivePlans.reduce((s, a) => s + a.totalUL, 0);
+
   return (
     <main className="calc-page">
       <h1>Mammalian Cell Seeding</h1>
@@ -685,11 +689,11 @@ export default function CellSeedingPage() {
           <section className="calc-card" style={{ marginTop: 18 }}>
             <div style={{ fontWeight: 800, marginBottom: 8 }}>Per-well volume from measured stock</div>
             <div>
-              Add <strong>{fmt(fromUL(result.plan.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> cell suspension + <strong>{fmt(fromUL(result.plan.mediaPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> media per well.
+              Add <strong>{fmt(fromUL(result.plan.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> cell suspension + <strong>{fmt(fromUL(additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> additives + <strong>{fmt(fromUL(result.plan.mediaPerWellUL - additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> base media per well.
             </div>
-            {result.plan.mediaPerWellUL < 0 ? (
+            {result.plan.mediaPerWellUL < 0 || result.plan.mediaPerWellUL - additivePerWellUL < 0 ? (
               <p style={{ marginTop: 8, color: "#64748b" }}>
-                Target is too high for this stock at selected well volume. Concentrate cells or increase dispense volume.
+                Total required volumes exceed selected well volume. Lower target/additives or increase dispense volume.
               </p>
             ) : null}
           </section>
@@ -698,7 +702,8 @@ export default function CellSeedingPage() {
             <div style={{ fontWeight: 800, marginBottom: 8 }}>Whole-plate seeding mix</div>
             <div>Target mix concentration: <strong>{fmt(result.plan.targetMixCellsPerMl, 0)} cells/mL</strong></div>
             <div style={{ marginTop: 4 }}>Total dispense volume: <strong>{fmt(fromUL(result.plan.totalDispenseUL, dispenseUnit), 2)} {dispenseUnit}</strong></div>
-            <div style={{ marginTop: 4 }}>Prepare total mix: <strong>{fmt(fromUL(result.plan.totalMixUL, dispenseUnit), 2)} {dispenseUnit}</strong> ({fmt(result.plan.totalMixMl, 3)} mL)</div>
+            <div style={{ marginTop: 4 }}>Total additives volume: <strong>{fmt(fromUL(additiveTotalUL, dispenseUnit), 2)} {dispenseUnit}</strong></div>
+            <div style={{ marginTop: 4 }}>Prepare cell+base-media mix: <strong>{fmt(fromUL(result.plan.totalMixUL - additiveTotalUL, dispenseUnit), 2)} {dispenseUnit}</strong> ({fmt(result.plan.totalMixMl - additiveTotalUL / 1000, 3)} mL)</div>
 
             {result.plan.canDilute ? (
               <div style={{ marginTop: 8 }}>
@@ -742,7 +747,7 @@ export default function CellSeedingPage() {
                     {result.byWellIds ? <td style={{ padding: 8, fontSize: 12 }}>{g.wellIds || "—"}</td> : null}
                     <td style={{ padding: 8 }}>{fmt(g.target, 0)} cells/well</td>
                     <td style={{ padding: 8 }}>
-                      {fmt(fromUL(g.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit} + {fmt(fromUL(g.mediaPerWellUL, dispenseUnit), 2)} {dispenseUnit}
+                      {fmt(fromUL(g.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit} + {fmt(fromUL(additivePerWellUL, dispenseUnit), 2)} {dispenseUnit} additives + {fmt(fromUL(g.mediaPerWellUL - additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}
                     </td>
                     <td style={{ padding: 8 }}>
                       {fmt(fromUL(g.totalMixUL, dispenseUnit), 2)} {dispenseUnit}
@@ -760,7 +765,7 @@ export default function CellSeedingPage() {
           invalid || !result
             ? undefined
             : result.mode === "single"
-              ? `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${fromUL(result.vWellUL, dispenseUnit)} ${dispenseUnit}\nPer well: ${fromUL(result.plan.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells + ${fromUL(result.plan.mediaPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} media`
+              ? `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${fromUL(result.vWellUL, dispenseUnit)} ${dispenseUnit}\nPer well: ${fromUL(result.plan.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells + ${fromUL(additivePerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} additives + ${fromUL(result.plan.mediaPerWellUL - additivePerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} base media`
               : `Cell Seeding (Treatment Groups)\nAssigned wells: ${result.assignedWells}/${result.wells}\n${result.groups.map((g) => `${g.name}: ${g.wells} wells${result.byWellIds && g.wellIds ? ` [${g.wellIds}]` : ""}, ${fromUL(g.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells/well`).join("\n")}`
         }
       />
