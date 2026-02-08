@@ -9,15 +9,16 @@ type VolUnit = "µL" | "mL";
 type TreatmentGroup = {
   name: string;
   wells: string;
+  wellIds: string;
   targetCellsPerWell: string;
 };
 
-const PRESETS: Record<Exclude<PlatePreset, "custom">, { wells: number; wellVolumeUL: number }> = {
-  "6-well": { wells: 6, wellVolumeUL: 2000 },
-  "12-well": { wells: 12, wellVolumeUL: 1000 },
-  "24-well": { wells: 24, wellVolumeUL: 500 },
-  "48-well": { wells: 48, wellVolumeUL: 300 },
-  "96-well": { wells: 96, wellVolumeUL: 100 },
+const PRESETS: Record<Exclude<PlatePreset, "custom">, { wells: number; wellVolumeUL: number; rows: number; cols: number }> = {
+  "6-well": { wells: 6, wellVolumeUL: 2000, rows: 2, cols: 3 },
+  "12-well": { wells: 12, wellVolumeUL: 1000, rows: 3, cols: 4 },
+  "24-well": { wells: 24, wellVolumeUL: 500, rows: 4, cols: 6 },
+  "48-well": { wells: 48, wellVolumeUL: 300, rows: 6, cols: 8 },
+  "96-well": { wells: 96, wellVolumeUL: 100, rows: 8, cols: 12 },
 };
 
 const VOL_TO_UL: Record<VolUnit, number> = { "µL": 1, mL: 1000 };
@@ -29,6 +30,60 @@ function fmt(x: number, maxFrac = 2) {
 
 function fromUL(valueUL: number, unit: VolUnit) {
   return valueUL / VOL_TO_UL[unit];
+}
+
+function buildAllowedWellSet(rows: number, cols: number) {
+  const set = new Set<string>();
+  for (let r = 0; r < rows; r++) {
+    const rowLabel = String.fromCharCode(65 + r);
+    for (let c = 1; c <= cols; c++) set.add(`${rowLabel}${c}`);
+  }
+  return set;
+}
+
+function parseWellToken(tokenRaw: string, allowed: Set<string>) {
+  const token = tokenRaw.trim().toUpperCase();
+  if (!token) return { ok: true as const, wells: [] as string[] };
+
+  if (!token.includes("-")) {
+    if (!allowed.has(token)) return { ok: false as const, error: `Invalid well: ${token}` };
+    return { ok: true as const, wells: [token] };
+  }
+
+  const [start, end] = token.split("-").map((x) => x.trim().toUpperCase());
+  const m1 = start.match(/^([A-Z])(\d+)$/);
+  const m2 = end.match(/^([A-Z])(\d+)$/);
+  if (!m1 || !m2) return { ok: false as const, error: `Invalid range: ${token}` };
+
+  const r1 = m1[1].charCodeAt(0);
+  const c1 = Number(m1[2]);
+  const r2 = m2[1].charCodeAt(0);
+  const c2 = Number(m2[2]);
+
+  const wells: string[] = [];
+  if (r1 === r2) {
+    const [a, b] = c1 <= c2 ? [c1, c2] : [c2, c1];
+    for (let c = a; c <= b; c++) wells.push(`${String.fromCharCode(r1)}${c}`);
+  } else if (c1 === c2) {
+    const [a, b] = r1 <= r2 ? [r1, r2] : [r2, r1];
+    for (let r = a; r <= b; r++) wells.push(`${String.fromCharCode(r)}${c1}`);
+  } else {
+    return { ok: false as const, error: `Use same-row or same-column ranges: ${token}` };
+  }
+
+  for (const w of wells) if (!allowed.has(w)) return { ok: false as const, error: `Out-of-plate well: ${w}` };
+  return { ok: true as const, wells };
+}
+
+function parseWellSelection(input: string, allowed: Set<string>) {
+  const parts = input.split(/[\s,;]+/).filter(Boolean);
+  const out = new Set<string>();
+  for (const p of parts) {
+    const parsed = parseWellToken(p, allowed);
+    if (!parsed.ok) return parsed;
+    parsed.wells.forEach((w) => out.add(w));
+  }
+  return { ok: true as const, wells: Array.from(out).sort() };
 }
 
 function computePlanForTarget(
@@ -84,10 +139,11 @@ export default function CellSeedingPage() {
   const [overagePercent, setOveragePercent] = useState<string>("10");
 
   const [useTreatments, setUseTreatments] = useState(false);
+  const [assignByWellIds, setAssignByWellIds] = useState(false);
   const [groups, setGroups] = useState<TreatmentGroup[]>([
-    { name: "Treatment 1", wells: "8", targetCellsPerWell: "50000" },
-    { name: "Treatment 2", wells: "8", targetCellsPerWell: "50000" },
-    { name: "Treatment 3", wells: "8", targetCellsPerWell: "50000" },
+    { name: "Treatment 1", wells: "8", wellIds: "A1-A6,B1-B2", targetCellsPerWell: "50000" },
+    { name: "Treatment 2", wells: "8", wellIds: "B3-B6,C1-C4", targetCellsPerWell: "50000" },
+    { name: "Treatment 3", wells: "8", wellIds: "C5-C6,D1-D6", targetCellsPerWell: "50000" },
   ]);
 
   const activePreset = preset === "custom" ? null : PRESETS[preset];
@@ -113,13 +169,35 @@ export default function CellSeedingPage() {
       };
     }
 
+    const allowedWellSet = preset === "custom" ? null : buildAllowedWellSet(PRESETS[preset].rows, PRESETS[preset].cols);
+    const globallyAssigned = new Set<string>();
+
     const groupPlans = groups.map((g) => {
-      const gw = Number(g.wells) || 0;
       const target = Number(g.targetCellsPerWell) || 0;
-      if (gw <= 0 || target <= 0) return null;
+      if (target <= 0) return null;
+
+      let gw = Number(g.wells) || 0;
+      let resolvedWellIds = "";
+
+      if (assignByWellIds && allowedWellSet) {
+        const parsed = parseWellSelection(g.wellIds, allowedWellSet);
+        if (!parsed.ok) return null;
+
+        for (const w of parsed.wells) {
+          if (globallyAssigned.has(w)) return null;
+          globallyAssigned.add(w);
+        }
+
+        gw = parsed.wells.length;
+        resolvedWellIds = parsed.wells.join(", ");
+      }
+
+      if (gw <= 0) return null;
+
       return {
         name: g.name || "Treatment",
         wells: gw,
+        wellIds: resolvedWellIds,
         target,
         ...computePlanForTarget(cStock, target, gw, vWellUL, overage),
       };
@@ -130,6 +208,7 @@ export default function CellSeedingPage() {
     const validGroups = groupPlans as Array<{
       name: string;
       wells: number;
+      wellIds: string;
       target: number;
       stockPerWellUL: number;
       mediaPerWellUL: number;
@@ -152,8 +231,9 @@ export default function CellSeedingPage() {
       vWellUL,
       overage,
       groups: validGroups,
+      byWellIds: assignByWellIds && !!allowedWellSet,
     };
-  }, [measuredCellsPerMl, wellsToSeed, dispenseVol, dispenseUnit, overagePercent, useTreatments, targetCellsPerWell, groups]);
+  }, [measuredCellsPerMl, wellsToSeed, dispenseVol, dispenseUnit, overagePercent, useTreatments, targetCellsPerWell, groups, assignByWellIds, preset]);
 
   const invalid = !result;
 
@@ -220,6 +300,17 @@ export default function CellSeedingPage() {
           <label>
             <input type="checkbox" checked={useTreatments} onChange={(e) => setUseTreatments(e.target.checked)} /> Use treatment groups
           </label>
+          {useTreatments ? (
+            <label>
+              <input
+                type="checkbox"
+                checked={assignByWellIds}
+                onChange={(e) => setAssignByWellIds(e.target.checked)}
+                disabled={preset === "custom"}
+              />{" "}
+              Assign by exact well IDs ({preset === "custom" ? "requires standard plate format" : "A1, A2, B1-B3"})
+            </label>
+          ) : null}
         </div>
 
         {!useTreatments ? (
@@ -233,7 +324,7 @@ export default function CellSeedingPage() {
             <div style={{ fontWeight: 800, marginBottom: 10 }}>Custom treatment groups</div>
             <div style={{ display: "grid", gap: 10 }}>
               {groups.map((g, idx) => (
-                <div key={idx} style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr 1fr auto", gap: 8, alignItems: "center" }}>
+                <div key={idx} style={{ display: "grid", gridTemplateColumns: assignByWellIds ? "1.1fr 1.3fr 1fr auto" : "1.2fr 0.8fr 1fr auto", gap: 8, alignItems: "center" }}>
                   <input
                     value={g.name}
                     onChange={(e) => {
@@ -243,18 +334,34 @@ export default function CellSeedingPage() {
                     }}
                     placeholder={`Treatment ${idx + 1}`}
                   />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    onFocus={(e) => e.currentTarget.select()}
-                    value={g.wells}
-                    onChange={(e) => {
-                      const next = [...groups];
-                      next[idx] = { ...next[idx], wells: e.target.value };
-                      setGroups(next);
-                    }}
-                    placeholder="Wells"
-                  />
+
+                  {assignByWellIds ? (
+                    <input
+                      type="text"
+                      onFocus={(e) => e.currentTarget.select()}
+                      value={g.wellIds}
+                      onChange={(e) => {
+                        const next = [...groups];
+                        next[idx] = { ...next[idx], wellIds: e.target.value };
+                        setGroups(next);
+                      }}
+                      placeholder="e.g., A1-A6,B1-B2"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      onFocus={(e) => e.currentTarget.select()}
+                      value={g.wells}
+                      onChange={(e) => {
+                        const next = [...groups];
+                        next[idx] = { ...next[idx], wells: e.target.value };
+                        setGroups(next);
+                      }}
+                      placeholder="Wells"
+                    />
+                  )}
+
                   <input
                     type="text"
                     inputMode="decimal"
@@ -276,10 +383,13 @@ export default function CellSeedingPage() {
                 </div>
               ))}
             </div>
+            {assignByWellIds ? (
+              <div style={{ fontSize: 12, opacity: 0.75 }}>Use commas for multiple wells; ranges allowed within same row/column (e.g., A1-A6, B1, B3-B4).</div>
+            ) : null}
             <button
               type="button"
               style={{ marginTop: 10 }}
-              onClick={() => setGroups((prev) => [...prev, { name: `Treatment ${prev.length + 1}`, wells: "", targetCellsPerWell: targetCellsPerWell || "50000" }])}
+              onClick={() => setGroups((prev) => [...prev, { name: `Treatment ${prev.length + 1}`, wells: "", wellIds: "", targetCellsPerWell: targetCellsPerWell || "50000" }])}
             >
               + Add treatment group
             </button>
@@ -337,6 +447,7 @@ export default function CellSeedingPage() {
                 <tr style={{ textAlign: "left" }}>
                   <th style={{ padding: 8 }}>Group</th>
                   <th style={{ padding: 8 }}>Wells</th>
+                  {result.byWellIds ? <th style={{ padding: 8 }}>Well IDs</th> : null}
                   <th style={{ padding: 8 }}>Target</th>
                   <th style={{ padding: 8 }}>Per well: cells + media</th>
                   <th style={{ padding: 8 }}>Total mix</th>
@@ -347,6 +458,7 @@ export default function CellSeedingPage() {
                   <tr key={`${g.name}-${i}`} style={{ borderTop: "1px solid #e5e7eb" }}>
                     <td style={{ padding: 8 }}>{g.name}</td>
                     <td style={{ padding: 8 }}>{g.wells}</td>
+                    {result.byWellIds ? <td style={{ padding: 8, fontSize: 12 }}>{g.wellIds || "—"}</td> : null}
                     <td style={{ padding: 8 }}>{fmt(g.target, 0)} cells/well</td>
                     <td style={{ padding: 8 }}>
                       {fmt(fromUL(g.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit} + {fmt(fromUL(g.mediaPerWellUL, dispenseUnit), 2)} {dispenseUnit}
@@ -368,7 +480,7 @@ export default function CellSeedingPage() {
             ? undefined
             : result.mode === "single"
               ? `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${fromUL(result.vWellUL, dispenseUnit)} ${dispenseUnit}\nPer well: ${fromUL(result.plan.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells + ${fromUL(result.plan.mediaPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} media`
-              : `Cell Seeding (Treatment Groups)\nAssigned wells: ${result.assignedWells}/${result.wells}\n${result.groups.map((g) => `${g.name}: ${g.wells} wells, ${fromUL(g.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells/well`).join("\n")}`
+              : `Cell Seeding (Treatment Groups)\nAssigned wells: ${result.assignedWells}/${result.wells}\n${result.groups.map((g) => `${g.name}: ${g.wells} wells${result.byWellIds && g.wellIds ? ` [${g.wellIds}]` : ""}, ${fromUL(g.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells/well`).join("\n")}`
         }
       />
     </main>
