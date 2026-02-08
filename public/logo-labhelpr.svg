@@ -1,0 +1,38 @@
+<svg width="1024" height="256" viewBox="0 0 1024 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0EA5A4"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon -->
+  <g transform="translate(24,24)">
+    <rect x="0" y="0" width="208" height="208" rx="44" fill="#F5FAFF"/>
+    <rect x="0" y="0" width="208" height="208" rx="44" stroke="#CDE6FF" stroke-width="4"/>
+
+    <!-- flask -->
+    <path d="M76 36H132M92 36V92L60 152C55 161 62 172 73 172H135C146 172 153 161 148 152L116 92V36" stroke="url(#g1)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M72 136C89 124 119 124 136 136" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- dna helper strand -->
+    <path d="M46 56C66 68 66 88 46 100C26 112 26 132 46 144" stroke="url(#g2)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M56 56C36 68 36 88 56 100C76 112 76 132 56 144" stroke="url(#g2)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M47 66H55M47 88H55M47 110H55M47 132H55" stroke="#0EA5A4" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- plus/help spark -->
+    <circle cx="156" cy="58" r="18" fill="#E0F2FE"/>
+    <path d="M156 50V66M148 58H164" stroke="#0284C7" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(260,54)">
+    <text x="0" y="84" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="88" font-weight="800" fill="#0F172A" letter-spacing="-1.5">lab</text>
+    <text x="144" y="84" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="88" font-weight="800" fill="url(#g1)" letter-spacing="-1.5">helpr</text>
+    <text x="4" y="126" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" font-weight="500" fill="#334155" letter-spacing="0.5">Wet-lab tools for life science researchers</text>
+  </g>
+</svg>

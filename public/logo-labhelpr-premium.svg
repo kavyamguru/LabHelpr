@@ -1,0 +1,15 @@
+<svg width="900" height="180" viewBox="0 0 900 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0EA5A4"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="14" width="152" height="152" rx="34" fill="#F5FAFF" stroke="#CDE6FF"/>
+  <path d="M60 44H120M74 44V90L50 126C46 133 51 142 59 142H121C129 142 134 133 130 126L106 90V44" stroke="url(#pg)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40 58C56 68 56 84 40 94C24 104 24 120 40 130" stroke="#06B6D4" stroke-width="5" stroke-linecap="round"/>
+  <path d="M50 58C34 68 34 84 50 94C66 104 66 120 50 130" stroke="#06B6D4" stroke-width="5" stroke-linecap="round"/>
+  <text x="190" y="96" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="74" font-weight="800" fill="#0F172A" letter-spacing="-1">lab</text>
+  <text x="320" y="96" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="74" font-weight="800" fill="url(#pg)" letter-spacing="-1">helpr</text>
+  <text x="194" y="130" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="24" font-weight="500" fill="#334155">Built for principal investigators and research teams</text>
+</svg>
