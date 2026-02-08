@@ -17,6 +17,7 @@ type AdditiveMode = "percent" | "stock";
 type Additive = {
   name: string;
   mode: AdditiveMode;
+  appliesTo: string; // "all" | `group:<index>`
   percent: string;
   stockConc: string;
   targetConc: string;
@@ -277,15 +278,21 @@ export default function CellSeedingPage() {
 
     return additives.map((a) => {
       const name = a.name.trim() || "Substance";
+      const appliesTo = a.appliesTo || "all";
+      const appliedWells = appliesTo === "all"
+        ? wells
+        : Math.max(0, Number(groups[Number(appliesTo.replace("group:", ""))]?.wells) || 0);
+
       if (a.mode === "percent") {
         const pct = Number(a.percent) || 0;
         const perWellUL = (vWellUL * pct) / 100;
         return {
           name,
           mode: a.mode,
+          appliesTo,
           detail: `${fmt(pct, 3)}% v/v`,
           perWellUL,
-          totalUL: perWellUL * wells,
+          totalUL: perWellUL * appliedWells,
           valid: pct >= 0,
         };
       }
@@ -296,17 +303,24 @@ export default function CellSeedingPage() {
       return {
         name,
         mode: a.mode,
+        appliesTo,
         detail: `${fmt(target, 3)} ${a.unitLabel || "unit"} from ${fmt(stock, 3)} ${a.unitLabel || "unit"} stock`,
         perWellUL,
-        totalUL: perWellUL * wells,
+        totalUL: perWellUL * appliedWells,
         valid: stock > 0 && target >= 0 && target <= stock,
       };
     });
-  }, [additives, dispenseVol, dispenseUnit, wellsToSeed]);
+  }, [additives, dispenseVol, dispenseUnit, wellsToSeed, groups]);
 
   const validAdditivePlans = additivePlans.filter((a) => a.valid && Number.isFinite(a.perWellUL));
-  const additivePerWellUL = validAdditivePlans.reduce((s, a) => s + a.perWellUL, 0);
+  const additivePerWellAllUL = validAdditivePlans
+    .filter((a) => a.appliesTo === "all")
+    .reduce((s, a) => s + a.perWellUL, 0);
   const additiveTotalUL = validAdditivePlans.reduce((s, a) => s + a.totalUL, 0);
+  const additivePerWellForGroupUL = (groupIndex: number) =>
+    validAdditivePlans
+      .filter((a) => a.appliesTo === "all" || a.appliesTo === `group:${groupIndex}`)
+      .reduce((s, a) => s + a.perWellUL, 0);
 
   return (
     <main className="calc-page">
@@ -563,7 +577,7 @@ export default function CellSeedingPage() {
             onClick={() =>
               setAdditives((prev) => [
                 ...prev,
-                { name: `Substance ${prev.length + 1}`, mode: "percent", percent: "", stockConc: "", targetConc: "", unitLabel: "µg/mL" },
+                { name: `Substance ${prev.length + 1}`, mode: "percent", appliesTo: "all", percent: "", stockConc: "", targetConc: "", unitLabel: "µg/mL" },
               ])
             }
           >
@@ -593,6 +607,23 @@ export default function CellSeedingPage() {
                   </div>
 
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <label>Applies to</label>
+                    <select
+                      value={a.appliesTo || "all"}
+                      onChange={(e) => {
+                        const next = [...additives];
+                        next[idx] = { ...next[idx], appliesTo: e.target.value };
+                        setAdditives(next);
+                      }}
+                    >
+                      <option value="all">All wells</option>
+                      {useTreatments
+                        ? groups.map((g, gi) => (
+                            <option key={gi} value={`group:${gi}`}>{g.name || `Treatment ${gi + 1}`}</option>
+                          ))
+                        : null}
+                    </select>
+
                     <label>Mode</label>
                     <select
                       value={a.mode}
@@ -669,7 +700,7 @@ export default function CellSeedingPage() {
                     <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
                       {plan.valid ? (
                         <>
-                          {plan.detail}: <strong>{fmt(fromUL(plan.perWellUL, dispenseUnit), 3)} {dispenseUnit}</strong> per well, total <strong>{fmt(fromUL(plan.totalUL, dispenseUnit), 3)} {dispenseUnit}</strong>.
+                          {plan.detail}: <strong>{fmt(fromUL(plan.perWellUL, dispenseUnit), 3)} {dispenseUnit}</strong> per well, total <strong>{fmt(fromUL(plan.totalUL, dispenseUnit), 3)} {dispenseUnit}</strong> ({plan.appliesTo === "all" ? "all wells" : "selected treatment"}).
                         </>
                       ) : (
                         <span style={{ color: "#64748b" }}>Check values for this substance (stock must be ≥ target).</span>
@@ -690,9 +721,9 @@ export default function CellSeedingPage() {
           <section className="calc-card" style={{ marginTop: 18 }}>
             <div style={{ fontWeight: 800, marginBottom: 8 }}>Per-well pipetting plan</div>
             <div>
-              Add <strong>{fmt(fromUL(result.plan.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> cell suspension + <strong>{fmt(fromUL(additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> additives + <strong>{fmt(fromUL(result.plan.mediaPerWellUL - additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> base media per well.
+              Add <strong>{fmt(fromUL(result.plan.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit}</strong> cell suspension + <strong>{fmt(fromUL(additivePerWellAllUL, dispenseUnit), 2)} {dispenseUnit}</strong> additives + <strong>{fmt(fromUL(result.plan.mediaPerWellUL - additivePerWellAllUL, dispenseUnit), 2)} {dispenseUnit}</strong> base media per well.
             </div>
-            {result.plan.mediaPerWellUL < 0 || result.plan.mediaPerWellUL - additivePerWellUL < 0 ? (
+            {result.plan.mediaPerWellUL < 0 || result.plan.mediaPerWellUL - additivePerWellAllUL < 0 ? (
               <p style={{ marginTop: 8, color: "#64748b" }}>
                 The summed volumes are greater than your selected well volume. Reduce target cells/additives, or increase dispense volume per well.
               </p>
@@ -748,7 +779,7 @@ export default function CellSeedingPage() {
                     {result.byWellIds ? <td style={{ padding: 8, fontSize: 12 }}>{g.wellIds || "—"}</td> : null}
                     <td style={{ padding: 8 }}>{fmt(g.target, 0)} cells/well</td>
                     <td style={{ padding: 8 }}>
-                      {fmt(fromUL(g.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit} + {fmt(fromUL(additivePerWellUL, dispenseUnit), 2)} {dispenseUnit} additives + {fmt(fromUL(g.mediaPerWellUL - additivePerWellUL, dispenseUnit), 2)} {dispenseUnit}
+                      {fmt(fromUL(g.stockPerWellUL, dispenseUnit), 2)} {dispenseUnit} + {fmt(fromUL(additivePerWellForGroupUL(i), dispenseUnit), 2)} {dispenseUnit} additives + {fmt(fromUL(g.mediaPerWellUL - additivePerWellForGroupUL(i), dispenseUnit), 2)} {dispenseUnit}
                     </td>
                     <td style={{ padding: 8 }}>
                       {fmt(fromUL(g.totalMixUL, dispenseUnit), 2)} {dispenseUnit}
@@ -766,7 +797,7 @@ export default function CellSeedingPage() {
           invalid || !result
             ? undefined
             : result.mode === "single"
-              ? `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${fromUL(result.vWellUL, dispenseUnit)} ${dispenseUnit}\nPer well: ${fromUL(result.plan.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells + ${fromUL(additivePerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} additives + ${fromUL(result.plan.mediaPerWellUL - additivePerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} base media`
+              ? `Cell Seeding Plan\nPlate wells: ${result.wells}\nDispense/well: ${fromUL(result.vWellUL, dispenseUnit)} ${dispenseUnit}\nPer well: ${fromUL(result.plan.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells + ${fromUL(additivePerWellAllUL, dispenseUnit).toFixed(2)} ${dispenseUnit} additives + ${fromUL(result.plan.mediaPerWellUL - additivePerWellAllUL, dispenseUnit).toFixed(2)} ${dispenseUnit} base media`
               : `Cell Seeding (Treatment Groups)\nAssigned wells: ${result.assignedWells}/${result.wells}\n${result.groups.map((g) => `${g.name}: ${g.wells} wells${result.byWellIds && g.wellIds ? ` [${g.wellIds}]` : ""}, ${fromUL(g.stockPerWellUL, dispenseUnit).toFixed(2)} ${dispenseUnit} cells/well`).join("\n")}`
         }
       />
