@@ -1672,7 +1672,7 @@ export default function StatisticalAnalysisPage() {
               <select value={transformMode} onChange={(e) => setTransformMode(e.target.value as any)} style={{ width: "100%" }}>
                 <option value="none">None</option>
                 <option value="log10">Log10 (drops ≤0; reported below)</option>
-                <option value="sqrt">Square Root (drops <0; reported below)</option>
+                <option value="sqrt">Square Root (drops &lt;0; reported below)</option>
                 <option value="arcsin">Arcsine (proportions 0–1; drops outside range)</option>
               </select>
               {transformDropped.totalDropped > 0 ? (
