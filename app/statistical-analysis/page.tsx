@@ -1988,7 +1988,8 @@ export default function StatisticalAnalysisPage() {
             <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
             <div style={{ height: 220 }}>
               <Scatter
-                data={() => {
+                data={() => ({ // type cast
+                  /* typed below */
                   const keys = sortedKeys;
                   const techPoints: any[] = [];
                   const bioPoints: any[] = [];
@@ -2008,7 +2009,7 @@ export default function StatisticalAnalysisPage() {
                       });
                     }
                   });
-                  return {
+                  return ({
                     labels: keys,
                     datasets: [
                       {
@@ -2025,8 +2026,8 @@ export default function StatisticalAnalysisPage() {
                         backgroundColor: bioPoints.map((_, i) => getColor(i)),
                       },
                     ],
-                  };
-                }}
+                  }) as any;
+                }
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
@@ -2139,7 +2140,8 @@ export default function StatisticalAnalysisPage() {
               </div>
               <div style={{ height: 220 }}>
                 <Line
-                  data={() => {
+                  data={() => ({ // type cast
+                  /* typed below */
                     const xs = tidyRows && mapping.concentration && responseColumn ? tidyRows
                       .map((row) => safeNumeric((row as any)[mapping.concentration!]))
                       .filter((v): v is number => v !== null)
