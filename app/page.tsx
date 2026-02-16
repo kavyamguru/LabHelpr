@@ -21,19 +21,49 @@ export default function Home() {
       </header>
 
       <section className="calc-card" style={{ marginTop: 16, maxWidth: 900 }}>
-        <Link href="/calculator" className="calc-launch" style={{ textDecoration: "none" }}>
-          <div className="calc-launch-box" aria-hidden="true">
-            <Image
-              src="/calculator-icon.png"
-              alt="Calculator"
-              width={512}
-              height={512}
-              quality={100}
-              className="calc-launch-icon"
-            />
-          </div>
-          <div className="calc-launch-text">LH Calculator</div>
-        </Link>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+          <Link href="/calculator" className="calc-launch" style={{ textDecoration: "none" }}>
+            <div className="calc-launch-box" aria-hidden="true">
+              <Image
+                src="/calculator-icon.png"
+                alt="Calculator"
+                width={512}
+                height={512}
+                quality={100}
+                className="calc-launch-icon"
+              />
+            </div>
+            <div className="calc-launch-text">LH Calculator</div>
+          </Link>
+
+          <Link href="/data-uploader" className="calc-launch" style={{ textDecoration: "none" }}>
+            <div className="calc-launch-box" aria-hidden="true">
+              <Image
+                src="/calculator-icon.png"
+                alt="Data Uploader"
+                width={512}
+                height={512}
+                quality={100}
+                className="calc-launch-icon"
+              />
+            </div>
+            <div className="calc-launch-text">Data Uploader & Tidy Engine</div>
+          </Link>
+
+          <Link href="/statistical-analysis" className="calc-launch" style={{ textDecoration: "none" }}>
+            <div className="calc-launch-box" aria-hidden="true">
+              <Image
+                src="/calculator-icon.png"
+                alt="Statistical Analysis"
+                width={512}
+                height={512}
+                quality={100}
+                className="calc-launch-icon"
+              />
+            </div>
+            <div className="calc-launch-text">Statistical Analysis Suite</div>
+          </Link>
+        </div>
       </section>
     </main>
   );

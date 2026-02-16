@@ -10,9 +10,18 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
+    "chart.js": "^4.5.1",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.1.0",
+    "jstat": "^1.9.6",
+    "ml-levenberg-marquardt": "^5.0.0",
     "next": "16.1.6",
+    "papaparse": "^5.5.3",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "19.2.3",
+    "simple-statistics": "^7.8.8",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
