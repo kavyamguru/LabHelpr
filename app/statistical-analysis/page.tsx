@@ -1091,6 +1091,14 @@ export default function StatisticalAnalysisPage() {
     });
   }, [groups]);
 
+  const sortedKeys = useMemo(() => {
+    const keys = Object.keys(groups);
+    if (!groupOrder.length) return keys;
+    const existing = groupOrder.filter((k) => keys.includes(k));
+    const remaining = keys.filter((k) => !existing.includes(k));
+    return [...existing, ...remaining];
+  }, [groups, groupOrder]);
+
   function handleGroupDrop(targetIdx: number) {
     if (dragIdx === null) return;
     setGroupOrder((prev) => {
