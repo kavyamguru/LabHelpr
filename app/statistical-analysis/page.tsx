@@ -345,7 +345,7 @@ function wilcoxonSignedRank(a: number[], b: number[]) {
   if (sigma === 0) return null;
   const z = (W - mu) / sigma;
   const p = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
-  return { W, p: Math.max(0, Math.min(1, p)), n };
+  return { W, p: Math.max(0, Math.min(1, p)), n, diffs };
 }
 
 function bootstrapMeanDiffCI(a: number[], b: number[], paired: boolean, reps = 2000, alpha = 0.05) {
