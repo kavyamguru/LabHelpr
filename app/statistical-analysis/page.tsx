@@ -1988,8 +1988,7 @@ export default function StatisticalAnalysisPage() {
             <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
             <div style={{ height: 220 }}>
               <Scatter
-                data={() => ({ // type cast
-                  /* typed below */
+                data={() => {
                   const keys = sortedKeys;
                   const techPoints: any[] = [];
                   const bioPoints: any[] = [];
@@ -2009,7 +2008,7 @@ export default function StatisticalAnalysisPage() {
                       });
                     }
                   });
-                  return ({
+                  return {
                     labels: keys,
                     datasets: [
                       {
