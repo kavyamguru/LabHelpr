@@ -982,7 +982,7 @@ export default function StatisticalAnalysisPage() {
   const [mapping, setMapping] = useState<Mapping>({});
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const [dataType, setDataType] = useState<"continuous" | "dose-response">("continuous");
+  const [dataType, setDataType] = useState<"continuous" | "dose-response" | "survival" | "correlation" | "categorical">("continuous");
   const [independence, setIndependence] = useState<"independent" | "paired">("independent");
   const [effectSizeD, setEffectSizeD] = useState<number>(0.6);
   const [effectSizeEta2, setEffectSizeEta2] = useState<number>(0.08);
@@ -1108,7 +1108,7 @@ export default function StatisticalAnalysisPage() {
     setError("");
   }
 
-  function loadScenario(csv: string, type: "continuous" | "dose-response") {
+  function loadScenario(csv: string, type: "continuous" | "dose-response" | "survival" | "correlation" | "categorical") {
     const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
     const rows = parsed.data as any[];
     const headerList = rows.length ? Object.keys(rows[0]) : [];
