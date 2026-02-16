@@ -1081,15 +1081,6 @@ export default function StatisticalAnalysisPage() {
     }
   }
 
-  useEffect(() => {
-    const keys = Object.keys(groups);
-    setGroupOrder((prev) => {
-      if (!prev.length) return keys;
-      const existing = prev.filter((k) => keys.includes(k));
-      const remaining = keys.filter((k) => !existing.includes(k));
-      return [...existing, ...remaining];
-    });
-  }, [groups]);
 
   function handleGroupDrop(targetIdx: number) {
     if (dragIdx === null) return;
@@ -1152,6 +1143,16 @@ export default function StatisticalAnalysisPage() {
     if (!tidyRows || !responseColumn) return { groups: {} as Record<string, number[]>, totalBioN: 0, tidy: [], techByGroupBio: {}, bioMeansByGroup: {} };
     return aggregateBiologicalMeans(tidyRows, mapping, responseColumn);
   }, [tidyRows, mapping, responseColumn]);
+
+  useEffect(() => {
+    const keys = Object.keys(groups);
+    setGroupOrder((prev) => {
+      if (!prev.length) return keys;
+      const existing = prev.filter((k) => keys.includes(k));
+      const remaining = keys.filter((k) => !existing.includes(k));
+      return [...existing, ...remaining];
+    });
+  }, [groups]);
 
   const survival = useMemo(() => {
     if (!tidyRows || !mapping.time || !mapping.status || !mapping.treatment) return null;
