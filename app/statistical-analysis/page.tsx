@@ -1091,14 +1091,6 @@ export default function StatisticalAnalysisPage() {
     });
   }, [groups]);
 
-  const sortedKeys = useMemo(() => {
-    const keys = Object.keys(groups);
-    if (!groupOrder.length) return keys;
-    const existing = groupOrder.filter((k) => keys.includes(k));
-    const remaining = keys.filter((k) => !existing.includes(k));
-    return [...existing, ...remaining];
-  }, [groups, groupOrder]);
-
   function handleGroupDrop(targetIdx: number) {
     if (dragIdx === null) return;
     setGroupOrder((prev) => {
@@ -1161,14 +1153,6 @@ export default function StatisticalAnalysisPage() {
     return aggregateBiologicalMeans(tidyRows, mapping, responseColumn);
   }, [tidyRows, mapping, responseColumn]);
 
-  const sortedKeys = useMemo(() => {
-    const keys = Object.keys(groups);
-    if (!groupOrder.length) return keys;
-    const existing = groupOrder.filter((k) => keys.includes(k));
-    const remaining = keys.filter((k) => !existing.includes(k));
-    return [...existing, ...remaining];
-  }, [groups, groupOrder]);
-
   const survival = useMemo(() => {
     if (!tidyRows || !mapping.time || !mapping.status || !mapping.treatment) return null;
     const grouped: Record<string, { time: number; status: number }[]> = {};
@@ -1204,6 +1188,14 @@ export default function StatisticalAnalysisPage() {
     const totalDropped = entries.reduce((s, e) => s + e.dropped, 0);
     return { entries, totalDropped };
   }, [groups, transformMode]);
+
+  const sortedKeys = useMemo(() => {
+    const keys = Object.keys(groups);
+    if (!groupOrder.length) return keys;
+    const existing = groupOrder.filter((k) => keys.includes(k));
+    const remaining = keys.filter((k) => !existing.includes(k));
+    return [...existing, ...remaining];
+  }, [groups, groupOrder]);
 
   const qpcr = useMemo(() => {
     if (!tidyRows || !mapping.targetCt || !mapping.housekeepingCt || !mapping.treatment) return null;
