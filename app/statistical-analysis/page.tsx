@@ -1500,7 +1500,7 @@ export default function StatisticalAnalysisPage() {
       const pAdj = adjustPValues(twAnova.simpleEffects.map((s) => s.p), pAdjustMethod);
       return twAnova.simpleEffects.map((s, idx) => ({ ...s, pAdj: pAdj[idx] }));
     })() : [] as typeof twAnova.simpleEffects;
-    return { ...twAnova, simple, adjustedSimple, valid: true } as (ReturnType<typeof twoWayANOVA> & { simple: string; adjustedSimple: typeof twAnova.simpleEffects; valid: boolean });
+    return { ...twAnova, simple, adjustedSimple: adjustedSimple || [], valid: true } as (ReturnType<typeof twoWayANOVA> & { simple: string; adjustedSimple: typeof twAnova.simpleEffects; valid: boolean });
   }, [twAnova, pAdjustMethod]);
 
   const tidyPreview = useMemo(() => formatPreview(tidyRows || []), [tidyRows]);
@@ -2218,7 +2218,7 @@ export default function StatisticalAnalysisPage() {
                 <div style={{ marginTop: 6, fontSize: 13 }}>{twAnovaResult.simple}</div>
                 {twAnovaResult.adjustedSimple?.length ? (
                   <div style={{ marginTop: 8, fontSize: 13 }}>
-                    Simple effects ({pAdjustMethod === "none" ? "no p-adjust" : `${pAdjustMethod} adjusted`}): {twAnovaResult.adjustedSimple.map((se) => `${se.factor} within ${se.within}: F(${se.df1}, ${se.df2})=${se.F.toFixed(2)}, ${formatP((se as any).pAdj ?? se.p)}`).join("; ")}
+                    Simple effects ({pAdjustMethod === "none" ? "no p-adjust" : `${pAdjustMethod} adjusted`}): {(twAnovaResult.adjustedSimple || []).map((se) => `${se.factor} within ${se.within}: F(${se.df1}, ${se.df2})=${se.F.toFixed(2)}, ${formatP((se as any).pAdj ?? se.p)}`).join("; ")}
                   </div>
                 ) : null}
               </div>
@@ -2242,14 +2242,14 @@ export default function StatisticalAnalysisPage() {
                 const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
                 const datasets: any[] = [];
                 const keyOrder = (() => {
-                  const keys = Object.keys(survival.grouped);
+                  const keys = Object.keys(survival?.grouped || {});
                   if (!groupOrder.length) return keys;
                   const existing = groupOrder.filter((k) => keys.includes(k));
                   const remaining = keys.filter((k) => !existing.includes(k));
                   return [...existing, ...remaining];
                 })();
                 keyOrder.forEach((k, idx) => {
-                  const series = survival.grouped[k].slice().sort((a, b) => a.time - b.time);
+                  const series = (survival?.grouped?.[k] ?? []).slice().sort((a, b) => a.time - b.time);
                   let atRisk = series.length;
                   let surv = 1;
                   const curve: Array<{ x: number; y: number }> = [{ x: 0, y: 1 }];
@@ -2317,7 +2317,7 @@ export default function StatisticalAnalysisPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {qpcr.table.map((r, idx) => (
+                    {(qpcr.table || []).map((r, idx) => (
                       <tr key={`ddct-${idx}`}>
                         <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.group}</td>
                         <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.bio}</td>
@@ -2330,7 +2330,7 @@ export default function StatisticalAnalysisPage() {
                 </table>
               </div>
               <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 8 }}>
-                {qpcr.summary?.map((s) => (
+                {(qpcr.summary || []).map((s) => (
                   <div key={`sum-${s.group}`} style={{ background: "#f8fafc", borderRadius: 12, padding: 12, border: "1px solid #d9e4f2" }}>
                     <div style={{ fontWeight: 700 }}>{s.group}</div>
                     <div>ΔΔCt mean = {s.ddctMean.toFixed(3)} ± {s.ddctSd.toFixed(3)}</div>
