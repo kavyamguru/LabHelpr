@@ -1982,79 +1982,82 @@ export default function StatisticalAnalysisPage() {
 
       <section className="calc-card" style={{ marginBottom: 12 }}>
         <div style={{ fontWeight: 800, marginBottom: 6 }}>Visualizations (colorblind-safe, ≥8 pt fonts)</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-          <div ref={superplotRef} style={{ background: "#0b1026", borderRadius: 14, padding: 12, color: "#e5e7eb", position: "relative" }}>
-            <div style={{ position: "absolute", top: 8, left: 8, fontWeight: 800, fontSize: 12 }}>A</div>
-            <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
-            <div style={{ height: 220 }}>
-              <Scatter
-                data={(() => ({
-                  labels: sortedKeys,
-                  datasets: [
-                    {
-                      label: formatUnitsLabel("Technical reps"),
-                      data: (() => {
-                        const pts: any[] = [];
-                        sortedKeys.forEach((k, idx) => {
-                          const bioBuckets = techByGroupBio[k] || {};
-                          Object.values(bioBuckets).forEach((vals) => {
-                            vals.forEach((v) => {
-                              pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+        {!tidyRows?.length ? (
+          <div style={{ color: "#6b7280" }}>Load data to activate charts.</div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+            <div ref={superplotRef} style={{ background: "#0b1026", borderRadius: 14, padding: 12, color: "#e5e7eb", position: "relative" }}>
+              <div style={{ position: "absolute", top: 8, left: 8, fontWeight: 800, fontSize: 12 }}>A</div>
+              <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
+              <div style={{ height: 220 }}>
+                <Scatter
+                  data={(() => ({
+                    labels: sortedKeys,
+                    datasets: [
+                      {
+                        label: formatUnitsLabel("Technical reps"),
+                        data: (() => {
+                          const pts: any[] = [];
+                          sortedKeys.forEach((k, idx) => {
+                            const bioBuckets = techByGroupBio[k] || {};
+                            Object.values(bioBuckets).forEach((vals) => {
+                              vals.forEach((v) => {
+                                pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+                              });
                             });
                           });
-                        });
-                        return pts;
-                      })(),
-                      pointRadius: 4,
-                      backgroundColor: ((len:number) => {
-                        const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                        return Array.from({length: len}, (_, i) => palette[i % palette.length]);
-                      })(sortedKeys.reduce((sum,k)=>{const b=techByGroupBio[k]||{};return sum+Object.values(b).reduce((s,v)=>s+v.length,0);},0)),
+                          return pts;
+                        })(),
+                        pointRadius: 4,
+                        backgroundColor: ((len:number) => {
+                          const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                          return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                        })(sortedKeys.reduce((sum,k)=>{const b=techByGroupBio[k]||{};return sum+Object.values(b).reduce((s,v)=>s+v.length,0);},0)),
+                      },
+                      {
+                        label: formatUnitsLabel("Biological means"),
+                        data: (() => {
+                          const pts: any[] = [];
+                          sortedKeys.forEach((k, idx) => {
+                            const bioMeans = bioMeansByGroup[k] || groups[k] || [];
+                            bioMeans.forEach((bm) => pts.push({ x: idx, y: bm }));
+                          });
+                          return pts;
+                        })(),
+                        pointRadius: 8,
+                        pointStyle: "triangle",
+                        backgroundColor: ((len:number) => {
+                          const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                          return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                        })((bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s,v)=>s+v.length,0)) || 0),
+                      },
+                    ],
+                  })) as any}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      x: {
+                        type: "linear",
+                        ticks: { color: "#cbd5e1", callback: (value) => sortedKeys[Number(value)] ?? value },
+                        grid: { color: "rgba(255,255,255,0.15)" },
+                        title: { display: true, text: mapping.treatment || "Group", color: "#e2e8f0", font: { size: 12 } },
+                      },
+                      y: {
+                        ticks: { color: "#cbd5e1" },
+                        grid: { color: "rgba(255,255,255,0.15)" },
+                        title: { display: true, text: responseWithUnits, color: "#e2e8f0", font: { size: 12 } },
+                      },
                     },
-                    {
-                      label: formatUnitsLabel("Biological means"),
-                      data: (() => {
-                        const pts: any[] = [];
-                        sortedKeys.forEach((k, idx) => {
-                          const bioMeans = bioMeansByGroup[k] || groups[k] || [];
-                          bioMeans.forEach((bm) => pts.push({ x: idx, y: bm }));
-                        });
-                        return pts;
-                      })(),
-                      pointRadius: 8,
-                      pointStyle: "triangle",
-                      backgroundColor: ((len:number) => {
-                        const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                        return Array.from({length: len}, (_, i) => palette[i % palette.length]);
-                      })((bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s,v)=>s+v.length,0)) || 0),
-                    },
-                  ],
-                })) as any}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  scales: {
-                    x: {
-                      type: "linear",
-                      ticks: { color: "#cbd5e1", callback: (value) => sortedKeys[Number(value)] ?? value },
-                      grid: { color: "rgba(255,255,255,0.15)" },
-                      title: { display: true, text: mapping.treatment || "Group", color: "#e2e8f0", font: { size: 12 } },
-                    },
-                    y: {
-                      ticks: { color: "#cbd5e1" },
-                      grid: { color: "rgba(255,255,255,0.15)" },
-                      title: { display: true, text: responseWithUnits, color: "#e2e8f0", font: { size: 12 } },
-                    },
-                  },
-                  plugins: { legend: { position: "bottom", labels: { color: "#e5e7eb", font: { size: 11 } } } },
-                }}
-              />
+                    plugins: { legend: { position: "bottom", labels: { color: "#e5e7eb", font: { size: 11 } } } },
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <button onClick={() => exportFigure(superplotRef, "superplot", "png", () => setExporting(null), () => setExporting("SuperPlot PNG"))}>Download PNG (high-res)</button>
+                <button onClick={() => exportFigure(superplotRef, "superplot", "pdf", () => setExporting(null), () => setExporting("SuperPlot PDF"))}>Download PDF</button>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-              <button onClick={() => exportFigure(superplotRef, "superplot", "png", () => setExporting(null), () => setExporting("SuperPlot PNG"))}>Download PNG (high-res)</button>
-              <button onClick={() => exportFigure(superplotRef, "superplot", "pdf", () => setExporting(null), () => setExporting("SuperPlot PDF"))}>Download PDF</button>
-            </div>
-          </div>
 
           <div ref={qqRef} style={{ background: "#0b1026", borderRadius: 14, padding: 12, color: "#e5e7eb", position: "relative" }}>
             <div style={{ position: "absolute", top: 8, left: 8, fontWeight: 800, fontSize: 12 }}>B</div>
@@ -2204,6 +2207,7 @@ export default function StatisticalAnalysisPage() {
             </div>
           ) : null}
         </div>
+        )}
       </section>
 
       {mapping.factorA && mapping.factorB ? (
