@@ -2142,8 +2142,7 @@ export default function StatisticalAnalysisPage() {
               </div>
               <div style={{ height: 220 }}>
                 <Line
-                  data={() => ({ // type cast
-                  /* typed below */
+                  data={() => {
                     const xs = tidyRows && mapping.concentration && responseColumn ? tidyRows
                       .map((row) => safeNumeric((row as any)[mapping.concentration!]))
                       .filter((v): v is number => v !== null)
@@ -2176,7 +2175,7 @@ export default function StatisticalAnalysisPage() {
                           pointRadius: 0,
                         },
                       ],
-                    };
+                    } as any;
                   }}
                   options={{
                     responsive: true,
