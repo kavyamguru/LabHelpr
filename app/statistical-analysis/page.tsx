@@ -1991,48 +1991,56 @@ export default function StatisticalAnalysisPage() {
               <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
               <div style={{ height: 220 }}>
                 <Scatter
-                  data={(() => ({
-                    labels: sortedKeys,
-                    datasets: [
-                      {
-                        label: formatUnitsLabel("Technical reps"),
-                        data: (() => {
-                          const pts: any[] = [];
-                          sortedKeys.forEach((k, idx) => {
-                            const bioBuckets = techByGroupBio[k] || {};
-                            Object.values(bioBuckets).forEach((vals) => {
-                              vals.forEach((v) => {
-                                pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+                  data={(() => {
+                    if (!sortedKeys.length) return { labels: [], datasets: [] };
+                    const techCount = sortedKeys.reduce((sum, k) => {
+                      const b = techByGroupBio[k] || {};
+                      return sum + Object.values(b).reduce((s, v) => s + v.length, 0);
+                    }, 0);
+                    const bioCount = (bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s, v) => s + v.length, 0)) || 0;
+                    return {
+                      labels: sortedKeys,
+                      datasets: [
+                        {
+                          label: formatUnitsLabel("Technical reps"),
+                          data: (() => {
+                            const pts: any[] = [];
+                            sortedKeys.forEach((k, idx) => {
+                              const bioBuckets = techByGroupBio[k] || {};
+                              Object.values(bioBuckets || {}).forEach((vals) => {
+                                (vals || []).forEach((v) => {
+                                  pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+                                });
                               });
                             });
-                          });
-                          return pts;
-                        })(),
-                        pointRadius: 4,
-                        backgroundColor: ((len:number) => {
-                          const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                          return Array.from({length: len}, (_, i) => palette[i % palette.length]);
-                        })(sortedKeys.reduce((sum,k)=>{const b=techByGroupBio[k]||{};return sum+Object.values(b).reduce((s,v)=>s+v.length,0);},0)),
-                      },
-                      {
-                        label: formatUnitsLabel("Biological means"),
-                        data: (() => {
-                          const pts: any[] = [];
-                          sortedKeys.forEach((k, idx) => {
-                            const bioMeans = bioMeansByGroup[k] || groups[k] || [];
-                            bioMeans.forEach((bm) => pts.push({ x: idx, y: bm }));
-                          });
-                          return pts;
-                        })(),
-                        pointRadius: 8,
-                        pointStyle: "triangle",
-                        backgroundColor: ((len:number) => {
-                          const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                          return Array.from({length: len}, (_, i) => palette[i % palette.length]);
-                        })((bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s,v)=>s+v.length,0)) || 0),
-                      },
-                    ],
-                  })) as any}
+                            return pts;
+                          })(),
+                          pointRadius: 4,
+                          backgroundColor: ((len:number) => {
+                            const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                            return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                          })(techCount),
+                        },
+                        {
+                          label: formatUnitsLabel("Biological means"),
+                          data: (() => {
+                            const pts: any[] = [];
+                            sortedKeys.forEach((k, idx) => {
+                              const bioMeans = bioMeansByGroup?.[k] || groups[k] || [];
+                              (bioMeans || []).forEach((bm) => pts.push({ x: idx, y: bm }));
+                            });
+                            return pts;
+                          })(),
+                          pointRadius: 8,
+                          pointStyle: "triangle",
+                          backgroundColor: ((len:number) => {
+                            const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                            return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                          })(bioCount),
+                        },
+                      ],
+                    };
+                  }) as any}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
@@ -2064,16 +2072,19 @@ export default function StatisticalAnalysisPage() {
             <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>Q-Q Plot</div>
             <div style={{ height: 220 }}>
               <Scatter
-                data={(() => ({
-                  datasets: [
-                    {
-                      label: "Sample vs theoretical",
-                      data: diagnostics && diagnostics.qq ? diagnostics.qq.sample.map((v, idx) => ({ x: diagnostics.qq.theoretical[idx], y: v })) : [],
-                      backgroundColor: "#1b9e77",
-                      pointRadius: 4,
-                    },
-                  ],
-                })) as any}
+                data={(() => {
+                  if (!diagnostics || !diagnostics.qq) return { datasets: [] };
+                  return {
+                    datasets: [
+                      {
+                        label: "Sample vs theoretical",
+                        data: (diagnostics.qq.sample || []).map((v, idx) => ({ x: diagnostics.qq.theoretical?.[idx], y: v })).filter((d) => d.x !== undefined && d.y !== undefined),
+                        backgroundColor: "#1b9e77",
+                        pointRadius: 4,
+                      },
+                    ],
+                  };
+                }) as any}
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
@@ -2153,6 +2164,7 @@ export default function StatisticalAnalysisPage() {
                     const ys = tidyRows && responseColumn ? tidyRows
                       .map((row) => safeNumeric((row as any)[responseColumn]))
                       .filter((v): v is number => v !== null) : [];
+                    if (!xs.length || !ys.length) return { datasets: [] } as any;
                     const curveX = xs.length ? Array.from({ length: 80 }, (_, i) => xs[0] + ((xs[xs.length - 1] - xs[0]) * i) / 79) : [];
                     const curveY = curveX.map((xv) => {
                       if (!doseFit) return null;
@@ -2170,7 +2182,7 @@ export default function StatisticalAnalysisPage() {
                         },
                         {
                           label: formatUnitsLabel("4PL fit"),
-                          data: curveX.map((xv, idx) => ({ x: xv, y: curveY[idx] })),
+                          data: curveX.map((xv, idx) => ({ x: xv, y: curveY[idx] })).filter((d) => d.y !== undefined && d.y !== null),
                           borderColor: "#f97316",
                           backgroundColor: "rgba(249,115,22,0.15)",
                           fill: true,
@@ -2243,6 +2255,7 @@ export default function StatisticalAnalysisPage() {
           <div style={{ height: 260 }}>
             <Line
               data={(() => {
+                if (!survival?.grouped) return { datasets: [] } as any;
                 const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
                 const datasets: any[] = [];
                 const keyOrder = (() => {
