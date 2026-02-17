@@ -1992,54 +1992,59 @@ export default function StatisticalAnalysisPage() {
               <div style={{ height: 220 }}>
                 <Scatter
                   data={(() => {
-                    if (!sortedKeys.length) return { labels: [], datasets: [] };
-                    const techCount = sortedKeys.reduce((sum, k) => {
-                      const b = techByGroupBio[k] || {};
-                      return sum + Object.values(b).reduce((s, v) => s + v.length, 0);
-                    }, 0);
-                    const bioCount = (bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s, v) => s + v.length, 0)) || 0;
-                    return {
-                      labels: sortedKeys,
-                      datasets: [
-                        {
-                          label: formatUnitsLabel("Technical reps"),
-                          data: (() => {
-                            const pts: any[] = [];
-                            sortedKeys.forEach((k, idx) => {
-                              const bioBuckets = techByGroupBio[k] || {};
-                              Object.values(bioBuckets || {}).forEach((vals) => {
-                                (vals || []).forEach((v) => {
-                                  pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+                    try {
+                      if (!sortedKeys.length) return { labels: [], datasets: [] };
+                      const techCount = sortedKeys.reduce((sum, k) => {
+                        const b = techByGroupBio[k] || {};
+                        return sum + Object.values(b).reduce((s, v) => s + v.length, 0);
+                      }, 0);
+                      const bioCount = (bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s, v) => s + v.length, 0)) || 0;
+                      return {
+                        labels: sortedKeys,
+                        datasets: [
+                          {
+                            label: formatUnitsLabel("Technical reps"),
+                            data: (() => {
+                              const pts: any[] = [];
+                              sortedKeys.forEach((k, idx) => {
+                                const bioBuckets = techByGroupBio[k] || {};
+                                Object.values(bioBuckets || {}).forEach((vals) => {
+                                  (vals || []).forEach((v) => {
+                                    pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+                                  });
                                 });
                               });
-                            });
-                            return pts;
-                          })(),
-                          pointRadius: 4,
-                          backgroundColor: ((len:number) => {
-                            const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                            return Array.from({length: len}, (_, i) => palette[i % palette.length]);
-                          })(techCount),
-                        },
-                        {
-                          label: formatUnitsLabel("Biological means"),
-                          data: (() => {
-                            const pts: any[] = [];
-                            sortedKeys.forEach((k, idx) => {
-                              const bioMeans = bioMeansByGroup?.[k] || groups[k] || [];
-                              (bioMeans || []).forEach((bm) => pts.push({ x: idx, y: bm }));
-                            });
-                            return pts;
-                          })(),
-                          pointRadius: 8,
-                          pointStyle: "triangle",
-                          backgroundColor: ((len:number) => {
-                            const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                            return Array.from({length: len}, (_, i) => palette[i % palette.length]);
-                          })(bioCount),
-                        },
-                      ],
-                    };
+                              return pts;
+                            })(),
+                            pointRadius: 4,
+                            backgroundColor: ((len:number) => {
+                              const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                              return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                            })(techCount),
+                          },
+                          {
+                            label: formatUnitsLabel("Biological means"),
+                            data: (() => {
+                              const pts: any[] = [];
+                              sortedKeys.forEach((k, idx) => {
+                                const bioMeans = bioMeansByGroup?.[k] || groups[k] || [];
+                                (bioMeans || []).forEach((bm) => pts.push({ x: idx, y: bm }));
+                              });
+                              return pts;
+                            })(),
+                            pointRadius: 8,
+                            pointStyle: "triangle",
+                            backgroundColor: ((len:number) => {
+                              const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                              return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                            })(bioCount),
+                          },
+                        ],
+                      };
+                    } catch (e) {
+                      console.error("SuperPlot data build failed", e);
+                      return { labels: [], datasets: [] };
+                    }
                   }) as any}
                   options={{
                     responsive: true,
@@ -2073,17 +2078,22 @@ export default function StatisticalAnalysisPage() {
             <div style={{ height: 220 }}>
               <Scatter
                 data={(() => {
-                  if (!diagnostics || !diagnostics.qq) return { datasets: [] };
-                  return {
-                    datasets: [
-                      {
-                        label: "Sample vs theoretical",
-                        data: (diagnostics.qq.sample || []).map((v, idx) => ({ x: diagnostics.qq.theoretical?.[idx], y: v })).filter((d) => d.x !== undefined && d.y !== undefined),
-                        backgroundColor: "#1b9e77",
-                        pointRadius: 4,
-                      },
-                    ],
-                  };
+                  try {
+                    if (!diagnostics || !diagnostics.qq) return { datasets: [] };
+                    return {
+                      datasets: [
+                        {
+                          label: "Sample vs theoretical",
+                          data: (diagnostics.qq.sample || []).map((v, idx) => ({ x: diagnostics.qq.theoretical?.[idx], y: v })).filter((d) => d.x !== undefined && d.y !== undefined),
+                          backgroundColor: "#1b9e77",
+                          pointRadius: 4,
+                        },
+                      ],
+                    };
+                  } catch (e) {
+                    console.error("QQ data build failed", e);
+                    return { datasets: [] };
+                  }
                 }) as any}
                 options={{
                   responsive: true,
@@ -2157,40 +2167,45 @@ export default function StatisticalAnalysisPage() {
               <div style={{ height: 220 }}>
                 <Line
                   data={(() => {
-                    const xs = tidyRows && mapping.concentration && responseColumn ? tidyRows
-                      .map((row) => safeNumeric((row as any)[mapping.concentration!]))
-                      .filter((v): v is number => v !== null)
-                      .sort((a, b) => a - b) : [];
-                    const ys = tidyRows && responseColumn ? tidyRows
-                      .map((row) => safeNumeric((row as any)[responseColumn]))
-                      .filter((v): v is number => v !== null) : [];
-                    if (!xs.length || !ys.length) return { datasets: [] } as any;
-                    const curveX = xs.length ? Array.from({ length: 80 }, (_, i) => xs[0] + ((xs[xs.length - 1] - xs[0]) * i) / 79) : [];
-                    const curveY = curveX.map((xv) => {
-                      if (!doseFit) return null;
-                      const { top, hill, ec50, bottom } = doseFit;
-                      return bottom + (top - bottom) / (1 + Math.pow(xv / ec50, hill));
-                    }).filter((v): v is number => v !== null);
-                    return {
-                      datasets: [
-                        {
-                          label: formatUnitsLabel("Observed"),
-                          data: xs.map((xv, idx) => ({ x: xv, y: ys[idx] })).filter((d) => d.x !== null && d.y !== null),
-                          pointRadius: 4,
-                          borderColor: "transparent",
-                          backgroundColor: "#60a5fa",
-                        },
-                        {
-                          label: formatUnitsLabel("4PL fit"),
-                          data: curveX.map((xv, idx) => ({ x: xv, y: curveY[idx] })).filter((d) => d.y !== undefined && d.y !== null),
-                          borderColor: "#f97316",
-                          backgroundColor: "rgba(249,115,22,0.15)",
-                          fill: true,
-                          tension: 0.25,
-                          pointRadius: 0,
-                        },
-                      ],
-                    } as any;
+                    try {
+                      const xs = tidyRows && mapping.concentration && responseColumn ? tidyRows
+                        .map((row) => safeNumeric((row as any)[mapping.concentration!]))
+                        .filter((v): v is number => v !== null)
+                        .sort((a, b) => a - b) : [];
+                      const ys = tidyRows && responseColumn ? tidyRows
+                        .map((row) => safeNumeric((row as any)[responseColumn]))
+                        .filter((v): v is number => v !== null) : [];
+                      if (!xs.length || !ys.length) return { datasets: [] } as any;
+                      const curveX = xs.length ? Array.from({ length: 80 }, (_, i) => xs[0] + ((xs[xs.length - 1] - xs[0]) * i) / 79) : [];
+                      const curveY = curveX.map((xv) => {
+                        if (!doseFit) return null;
+                        const { top, hill, ec50, bottom } = doseFit;
+                        return bottom + (top - bottom) / (1 + Math.pow(xv / ec50, hill));
+                      }).filter((v): v is number => v !== null);
+                      return {
+                        datasets: [
+                          {
+                            label: formatUnitsLabel("Observed"),
+                            data: xs.map((xv, idx) => ({ x: xv, y: ys[idx] })).filter((d) => d.x !== null && d.y !== null),
+                            pointRadius: 4,
+                            borderColor: "transparent",
+                            backgroundColor: "#60a5fa",
+                          },
+                          {
+                            label: formatUnitsLabel("4PL fit"),
+                            data: curveX.map((xv, idx) => ({ x: xv, y: curveY[idx] })).filter((d) => d.y !== undefined && d.y !== null),
+                            borderColor: "#f97316",
+                            backgroundColor: "rgba(249,115,22,0.15)",
+                            fill: true,
+                            tension: 0.25,
+                            pointRadius: 0,
+                          },
+                        ],
+                      } as any;
+                    } catch (e) {
+                      console.error("Dose plot data build failed", e);
+                      return { datasets: [] } as any;
+                    }
                   }) as any}
                   options={{
                     responsive: true,
@@ -2255,51 +2270,56 @@ export default function StatisticalAnalysisPage() {
           <div style={{ height: 260 }}>
             <Line
               data={(() => {
-                if (!survival?.grouped) return { datasets: [] } as any;
-                const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                const datasets: any[] = [];
-                const keyOrder = (() => {
-                  const keys = Object.keys(survival?.grouped || {});
-                  if (!groupOrder.length) return keys;
-                  const existing = groupOrder.filter((k) => keys.includes(k));
-                  const remaining = keys.filter((k) => !existing.includes(k));
-                  return [...existing, ...remaining];
-                })();
-                keyOrder.forEach((k, idx) => {
-                  const series = (survival?.grouped?.[k] ?? []).slice().sort((a, b) => a.time - b.time);
-                  let atRisk = series.length;
-                  let surv = 1;
-                  const curve: Array<{ x: number; y: number }> = [{ x: 0, y: 1 }];
-                  const censorPoints: Array<{ x: number; y: number }> = [];
-                  series.forEach((pt) => {
-                    if (pt.status === 1 && atRisk > 0) {
-                      surv *= (1 - 1 / atRisk);
-                    } else if (pt.status === 0) {
-                      censorPoints.push({ x: pt.time, y: surv });
-                    }
-                    atRisk -= 1;
-                    curve.push({ x: pt.time, y: surv });
+                try {
+                  if (!survival?.grouped) return { datasets: [] } as any;
+                  const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                  const datasets: any[] = [];
+                  const keyOrder = (() => {
+                    const keys = Object.keys(survival?.grouped || {});
+                    if (!groupOrder.length) return keys;
+                    const existing = groupOrder.filter((k) => keys.includes(k));
+                    const remaining = keys.filter((k) => !existing.includes(k));
+                    return [...existing, ...remaining];
+                  })();
+                  keyOrder.forEach((k, idx) => {
+                    const series = (survival?.grouped?.[k] ?? []).slice().sort((a, b) => a.time - b.time);
+                    let atRisk = series.length;
+                    let surv = 1;
+                    const curve: Array<{ x: number; y: number }> = [{ x: 0, y: 1 }];
+                    const censorPoints: Array<{ x: number; y: number }> = [];
+                    series.forEach((pt) => {
+                      if (pt.status === 1 && atRisk > 0) {
+                        surv *= (1 - 1 / atRisk);
+                      } else if (pt.status === 0) {
+                        censorPoints.push({ x: pt.time, y: surv });
+                      }
+                      atRisk -= 1;
+                      curve.push({ x: pt.time, y: surv });
+                    });
+                    datasets.push({
+                      label: k,
+                      data: curve,
+                      borderColor: palette[idx % palette.length],
+                      backgroundColor: "transparent",
+                      stepped: true,
+                      pointRadius: 0,
+                      tension: 0,
+                    });
+                    datasets.push({
+                      label: `${k} censored`,
+                      data: censorPoints,
+                      borderColor: "transparent",
+                      backgroundColor: palette[idx % palette.length],
+                      pointRadius: 4,
+                      pointStyle: "crossRot",
+                      showLine: false,
+                    });
                   });
-                  datasets.push({
-                    label: k,
-                    data: curve,
-                    borderColor: palette[idx % palette.length],
-                    backgroundColor: "transparent",
-                    stepped: true,
-                    pointRadius: 0,
-                    tension: 0,
-                  });
-                  datasets.push({
-                    label: `${k} censored`,
-                    data: censorPoints,
-                    borderColor: "transparent",
-                    backgroundColor: palette[idx % palette.length],
-                    pointRadius: 4,
-                    pointStyle: "crossRot",
-                    showLine: false,
-                  });
-                });
-                return { datasets };
+                  return { datasets };
+                } catch (e) {
+                  console.error("Survival data build failed", e);
+                  return { datasets: [] } as any;
+                }
               }) as any}
               options={{
                 responsive: true,
