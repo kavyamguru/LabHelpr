@@ -2359,7 +2359,7 @@ export default function StatisticalAnalysisPage() {
             ) : null}
             {corrAnalysis.slopeHet ? (
               <div style={{ marginTop: 6 }}>
-                Slope heterogeneity (pairwise): {corrAnalysis.slopeHet.comparisons.map((c) => `${c.a} vs ${c.b}: Δ=${c.diff.toPrecision(4)}, t(${c.df.toFixed(1)})=${c.t.toFixed(2)}, ${formatP(c.p)}`).join("; ")}
+                Slope heterogeneity (pairwise): {(corrAnalysis.slopeHet.comparisons || []).map((c) => `${c.a} vs ${c.b}: Δ=${c.diff.toPrecision(4)}, t(${c.df.toFixed(1)})=${c.t.toFixed(2)}, ${formatP(c.p)}`).join("; ")}
               </div>
             ) : null}
           </div>
