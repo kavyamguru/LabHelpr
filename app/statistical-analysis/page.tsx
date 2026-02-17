@@ -1988,45 +1988,48 @@ export default function StatisticalAnalysisPage() {
             <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
             <div style={{ height: 220 }}>
               <Scatter
-                data={() => {
-                  const keys = sortedKeys;
-                  const techPoints: any[] = [];
-                  const bioPoints: any[] = [];
-                  const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
-                  const getColor = (idx: number) => palette[idx % palette.length];
-                  keys.forEach((k, idx) => {
-                    const bioBuckets = techByGroupBio[k] || {};
-                    Object.values(bioBuckets).forEach((vals) => {
-                      vals.forEach((v) => {
-                        techPoints.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
-                      });
-                    });
-                    const bioMeans = bioMeansByGroup[k] || groups[k] || [];
-                    if (bioMeans.length) {
-                      bioMeans.forEach((bm) => {
-                        bioPoints.push({ x: idx, y: bm });
-                      });
-                    }
-                  });
-                  return {
-                    labels: keys,
-                    datasets: [
-                      {
-                        label: formatUnitsLabel("Technical reps"),
-                        data: techPoints,
-                        pointRadius: 4,
-                        backgroundColor: techPoints.map((_, i) => getColor(i)),
-                      },
-                      {
-                        label: formatUnitsLabel("Biological means"),
-                        data: bioPoints,
-                        pointRadius: 8,
-                        pointStyle: "triangle",
-                        backgroundColor: bioPoints.map((_, i) => getColor(i)),
-                      },
-                    ],
-                  }) as any;
-                }
+                data={() => ({
+                  labels: sortedKeys,
+                  datasets: [
+                    {
+                      label: formatUnitsLabel("Technical reps"),
+                      data: (() => {
+                        const pts: any[] = [];
+                        sortedKeys.forEach((k, idx) => {
+                          const bioBuckets = techByGroupBio[k] || {};
+                          Object.values(bioBuckets).forEach((vals) => {
+                            vals.forEach((v) => {
+                              pts.push({ x: idx + (Math.random() - 0.5) * 0.14, y: v });
+                            });
+                          });
+                        });
+                        return pts;
+                      })(),
+                      pointRadius: 4,
+                      backgroundColor: ((len:number) => {
+                        const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                        return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                      })(sortedKeys.reduce((sum,k)=>{const b=techByGroupBio[k]||{};return sum+Object.values(b).reduce((s,v)=>s+v.length,0);},0)),
+                    },
+                    {
+                      label: formatUnitsLabel("Biological means"),
+                      data: (() => {
+                        const pts: any[] = [];
+                        sortedKeys.forEach((k, idx) => {
+                          const bioMeans = bioMeansByGroup[k] || groups[k] || [];
+                          bioMeans.forEach((bm) => pts.push({ x: idx, y: bm }));
+                        });
+                        return pts;
+                      })(),
+                      pointRadius: 8,
+                      pointStyle: "triangle",
+                      backgroundColor: ((len:number) => {
+                        const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
+                        return Array.from({length: len}, (_, i) => palette[i % palette.length]);
+                      })((bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s,v)=>s+v.length,0)) || 0),
+                    },
+                  ],
+                }) as any}
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
