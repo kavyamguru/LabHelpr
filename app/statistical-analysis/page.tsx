@@ -1678,7 +1678,7 @@ export default function StatisticalAnalysisPage() {
               </select>
               {transformDropped.totalDropped > 0 ? (
                 <div style={{ marginTop: 6, fontSize: 12, color: "#b45309" }}>
-                  {transformDropped.totalDropped} value(s) excluded by transform: {transformDropped.entries.filter((e) => e.dropped > 0).map((e) => `${e.group}: ${e.dropped}`).join(", ")}
+                  {transformDropped.totalDropped} value(s) excluded by transform: {(transformDropped.entries || []).filter((e) => e.dropped > 0).map((e) => `${e.group}: ${e.dropped}`).join(", ")}
                 </div>
               ) : null}
             </div>
@@ -1892,7 +1892,7 @@ export default function StatisticalAnalysisPage() {
                 <div style={{ marginTop: 8, fontSize: 13 }}>
                   Per-group normality:
                   <ul style={{ margin: "4px 0 0 14px", padding: 0 }}>
-                    {diagnostics.perGroupNormal.map((g) => (
+                    {(diagnostics.perGroupNormal || []).map((g) => (
                       <li key={`norm-${g.group}`}>{g.group}: W={g.w.toFixed(3)}, p={g.p.toPrecision(3)}</li>
                     ))}
                   </ul>
@@ -2065,7 +2065,7 @@ export default function StatisticalAnalysisPage() {
                   datasets: [
                     {
                       label: "Sample vs theoretical",
-                      data: diagnostics ? diagnostics.qq.sample.map((v, idx) => ({ x: diagnostics.qq.theoretical[idx], y: v })) : [],
+                      data: diagnostics && diagnostics.qq ? diagnostics.qq.sample.map((v, idx) => ({ x: diagnostics.qq.theoretical[idx], y: v })) : [],
                       backgroundColor: "#1b9e77",
                       pointRadius: 4,
                     },
