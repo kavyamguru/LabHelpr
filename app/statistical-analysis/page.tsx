@@ -909,7 +909,7 @@ function groupBy<T extends Record<string, any>>(rows: T[], key?: string) {
   return map;
 }
 
-async function exportLayoutPdf(refs: { [k: string]: RefObject<HTMLElement> }, onDone?: () => void, onStart?: () => void) {
+async function exportLayoutPdf(refs: { [k: string]: RefObject<HTMLElement | null> }, onDone?: () => void, onStart?: () => void) {
   onStart?.();
   const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
   let first = true;
@@ -946,7 +946,7 @@ function exportReportPdf(parts: string[], onDone?: () => void, onStart?: () => v
   onDone?.();
 }
 
-function exportFigure(ref: RefObject<HTMLElement>, filename: string, format: "png" | "pdf", onDone?: () => void, onStart?: () => void) {
+function exportFigure(ref: RefObject<HTMLElement | null>, filename: string, format: "png" | "pdf", onDone?: () => void, onStart?: () => void) {
   const node = ref.current;
   if (!node) return;
   onStart?.();
@@ -1988,7 +1988,7 @@ export default function StatisticalAnalysisPage() {
             <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>SuperPlot</div>
             <div style={{ height: 220 }}>
               <Scatter
-                data={() => ({
+                data={(() => ({
                   labels: sortedKeys,
                   datasets: [
                     {
@@ -2029,7 +2029,7 @@ export default function StatisticalAnalysisPage() {
                       })((bioMeansByGroup && Object.values(bioMeansByGroup).reduce((s,v)=>s+v.length,0)) || 0),
                     },
                   ],
-                }) as any}
+                })) as any}
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
@@ -2061,7 +2061,7 @@ export default function StatisticalAnalysisPage() {
             <div style={{ fontWeight: 800, marginBottom: 6, paddingLeft: 18 }}>Q-Q Plot</div>
             <div style={{ height: 220 }}>
               <Scatter
-                data={() => ({
+                data={(() => ({
                   datasets: [
                     {
                       label: "Sample vs theoretical",
@@ -2070,7 +2070,7 @@ export default function StatisticalAnalysisPage() {
                       pointRadius: 4,
                     },
                   ],
-                })}
+                })) as any}
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
@@ -2142,7 +2142,7 @@ export default function StatisticalAnalysisPage() {
               </div>
               <div style={{ height: 220 }}>
                 <Line
-                  data={() => {
+                  data={(() => {
                     const xs = tidyRows && mapping.concentration && responseColumn ? tidyRows
                       .map((row) => safeNumeric((row as any)[mapping.concentration!]))
                       .filter((v): v is number => v !== null)
@@ -2176,7 +2176,7 @@ export default function StatisticalAnalysisPage() {
                         },
                       ],
                     } as any;
-                  }}
+                  }) as any}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
@@ -2218,7 +2218,7 @@ export default function StatisticalAnalysisPage() {
                 <div style={{ marginTop: 6, fontSize: 13 }}>{twAnovaResult.simple}</div>
                 {twAnovaResult.adjustedSimple?.length ? (
                   <div style={{ marginTop: 8, fontSize: 13 }}>
-                    Simple effects ({pAdjustMethod === "none" ? "no p-adjust" : `${pAdjustMethod} adjusted`}): {twAnovaResult.adjustedSimple.map((se) => `${se.factor} within ${se.within}: F(${se.df1}, ${se.df2})=${se.F.toFixed(2)}, ${formatP(se.pAdj ?? se.p)}`).join("; ")}
+                    Simple effects ({pAdjustMethod === "none" ? "no p-adjust" : `${pAdjustMethod} adjusted`}): {twAnovaResult.adjustedSimple.map((se) => `${se.factor} within ${se.within}: F(${se.df1}, ${se.df2})=${se.F.toFixed(2)}, ${formatP((se as any).pAdj ?? se.p)}`).join("; ")}
                   </div>
                 ) : null}
               </div>
@@ -2238,7 +2238,7 @@ export default function StatisticalAnalysisPage() {
           ) : <div style={{ color: "#6b7280" }}>Need ≥2 groups with Time and Status to run log-rank.</div>}
           <div style={{ height: 260 }}>
             <Line
-              data={() => {
+              data={(() => {
                 const palette = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666"];
                 const datasets: any[] = [];
                 const keyOrder = (() => {
@@ -2283,7 +2283,7 @@ export default function StatisticalAnalysisPage() {
                   });
                 });
                 return { datasets };
-              }}
+              }) as any}
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
@@ -2322,8 +2322,8 @@ export default function StatisticalAnalysisPage() {
                         <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.group}</td>
                         <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.bio}</td>
                         <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.deltaCt.toFixed(3)}</td>
-                        <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.ddct.toFixed(3)}</td>
-                        <td style={{ padding: "8px 10px", fontSize: 13 }}>{r.fold.toPrecision(4)}</td>
+                        <td style={{ padding: "8px 10px", fontSize: 13 }}>{(r as any).ddct?.toFixed(3)}</td>
+                        <td style={{ padding: "8px 10px", fontSize: 13 }}>{(r as any).fold?.toPrecision(4)}</td>
                       </tr>
                     ))}
                   </tbody>
