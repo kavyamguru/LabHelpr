@@ -12,12 +12,13 @@ function applyMode(mode: Mode) {
 }
 
 export default function ThemeToggle() {
-  const [mode, setMode] = useState<Mode>("system");
+  const [mode, setMode] = useState<Mode>(() => {
+    if (typeof window === "undefined") return "system";
+    return (localStorage.getItem("labhelpr-theme") as Mode | null) ?? "system";
+  });
 
   useEffect(() => {
-    const stored = (localStorage.getItem("labhelpr-theme") as Mode | null) ?? "system";
-    setMode(stored);
-    applyMode(stored);
+    applyMode(mode);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
@@ -26,7 +27,7 @@ export default function ThemeToggle() {
     };
     media.addEventListener("change", handler);
     return () => media.removeEventListener("change", handler);
-  }, []);
+  }, [mode]);
 
   function update(next: Mode) {
     setMode(next);

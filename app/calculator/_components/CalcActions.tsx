@@ -1,8 +1,6 @@
 "use client";
 
-type Props = { copyText?: string };
-
-export default function CalcActions(_props: Props) {
+export default function CalcActions() {
   function onReset() {
     window.location.reload();
   }

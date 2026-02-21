@@ -3,43 +3,51 @@
 import { useMemo, useState } from "react";
 import CalcActions from "../_components/CalcActions";
 
-type Unit = "nM" | "µM" | "mM" | "M";
+type ConcUnit = "fM" | "pM" | "nM" | "µM" | "mM" | "M";
 
-const FACTORS: Record<Unit, number> = {
+type VolUnit = "pL" | "nL" | "µL" | "mL" | "L";
+
+const CONC_FACTORS: Record<ConcUnit, number> = {
+  fM: 1e-15,
+  pM: 1e-12,
   nM: 1e-9,
   "µM": 1e-6,
   mM: 1e-3,
   M: 1,
 };
 
-function toBase(value: number, unit: Unit) {
-  return value * FACTORS[unit];
-}
+const VOL_FACTORS: Record<VolUnit, number> = {
+  pL: 1e-12,
+  nL: 1e-9,
+  "µL": 1e-6,
+  mL: 1e-3,
+  L: 1,
+};
 
-function fromBase(value: number, unit: Unit) {
-  return value / FACTORS[unit];
+function toBaseConc(value: number, unit: ConcUnit) {
+  return value * CONC_FACTORS[unit];
 }
 
 export default function DilutionPage() {
   // C1 * V1 = C2 * V2
   const [c1, setC1] = useState(10);
-  const [c1Unit, setC1Unit] = useState<Unit>("mM");
+  const [c1Unit, setC1Unit] = useState<ConcUnit>("mM");
 
   const [c2, setC2] = useState(250);
-  const [c2Unit, setC2Unit] = useState<Unit>("µM");
+  const [c2Unit, setC2Unit] = useState<ConcUnit>("µM");
 
   const [v2, setV2] = useState(1000);
-  const [v2Unit, setV2Unit] = useState<"µL" | "mL">("µL");
+  const [v2Unit, setV2Unit] = useState<VolUnit>("µL");
 
   const hasInvalid = c1 <= 0 || c2 < 0 || v2 <= 0;
 
   const { v1Value, v1UnitLabel, diluentValue, diluentUnitLabel } = useMemo(() => {
     // Convert concentrations to M
-    const C1 = toBase(Number(c1) || 0, c1Unit);
-    const C2 = toBase(Number(c2) || 0, c2Unit);
+    const C1 = toBaseConc(Number(c1) || 0, c1Unit);
+    const C2 = toBaseConc(Number(c2) || 0, c2Unit);
 
     // Convert V2 to liters
-    const V2_L = (Number(v2) || 0) * (v2Unit === "µL" ? 1e-6 : 1e-3);
+    const V2_L = (Number(v2) || 0) * VOL_FACTORS[v2Unit];
 
     // V1 = (C2 * V2) / C1
     const V1_L = C1 === 0 ? 0 : (C2 * V2_L) / C1;
@@ -48,7 +56,7 @@ export default function DilutionPage() {
     const diluent_L = Math.max(0, V2_L - V1_L);
 
     // Display results in chosen V2 unit
-    const displayFactor = v2Unit === "µL" ? 1e6 : 1e3;
+    const displayFactor = 1 / VOL_FACTORS[v2Unit];
     const unitLabel = v2Unit;
 
     return {
@@ -76,8 +84,8 @@ export default function DilutionPage() {
             onChange={(e) => setC1(Number(e.target.value))}
             style={{ padding: 8, width: 140 }}
           />
-          <select value={c1Unit} onChange={(e) => setC1Unit(e.target.value as Unit)}>
-            {Object.keys(FACTORS).map((u) => (
+          <select value={c1Unit} onChange={(e) => setC1Unit(e.target.value as ConcUnit)}>
+            {Object.keys(CONC_FACTORS).map((u) => (
               <option key={u} value={u}>
                 {u}
               </option>
@@ -94,8 +102,8 @@ export default function DilutionPage() {
             onChange={(e) => setC2(Number(e.target.value))}
             style={{ padding: 8, width: 140 }}
           />
-          <select value={c2Unit} onChange={(e) => setC2Unit(e.target.value as Unit)}>
-            {Object.keys(FACTORS).map((u) => (
+          <select value={c2Unit} onChange={(e) => setC2Unit(e.target.value as ConcUnit)}>
+            {Object.keys(CONC_FACTORS).map((u) => (
               <option key={u} value={u}>
                 {u}
               </option>
@@ -112,9 +120,12 @@ export default function DilutionPage() {
             onChange={(e) => setV2(Number(e.target.value))}
             style={{ padding: 8, width: 140 }}
           />
-          <select value={v2Unit} onChange={(e) => setV2Unit(e.target.value as "µL" | "mL")}>
-            <option value="µL">µL</option>
-            <option value="mL">mL</option>
+          <select value={v2Unit} onChange={(e) => setV2Unit(e.target.value as VolUnit)}>
+            {Object.keys(VOL_FACTORS).map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -152,4 +163,3 @@ export default function DilutionPage() {
     </main>
   );
 }
-

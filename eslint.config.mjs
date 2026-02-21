@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Workspace aux folders not part of the Next app:
+    "repo-polish/**",
+    "kavyamguru-profile/**",
+    "memory/**",
   ]),
 ]);
 

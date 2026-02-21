@@ -182,7 +182,7 @@ export default function CellSeedingPage() {
     return map;
   }, [groups, allowedWellSet]);
 
-  const result = useMemo(() => {
+  const result = (() => {
     const cStock = Number(measuredCellsPerMl) || 0;
     const wells = Number(wellsToSeed) || 0;
     const vWellInput = Number(dispenseVol) || 0;
@@ -266,7 +266,7 @@ export default function CellSeedingPage() {
       groups: validGroups,
       byWellIds: assignByWellIds && !!allowedWellSet,
     };
-  }, [measuredCellsPerMl, wellsToSeed, dispenseVol, dispenseUnit, overagePercent, useTreatments, targetCellsPerWell, groups, assignByWellIds, preset]);
+  })();
 
   const invalid = !result;
 

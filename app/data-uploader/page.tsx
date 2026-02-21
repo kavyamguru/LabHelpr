@@ -4,14 +4,21 @@ import { useMemo, useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 
+type DataRow = Record<string, unknown>;
+type TidyRow = Record<string, unknown>;
+
+type MappingKey = "treatment" | "concentration" | "bioReplicate" | "techReplicate";
+
+type Mapping = Partial<Record<MappingKey, string>>;
+
 function normalizeHeader(header: string) {
   return header.toLowerCase().replace(/\s+/g, "_");
 }
 
-function inferColumns(headers: string[]) {
+function inferColumns(headers: string[]): Mapping {
   const lower = headers.map((h) => normalizeHeader(h));
   const findMatch = (keywords: string[]) =>
-    headers.find((h, idx) => keywords.some((k) => lower[idx].includes(k)));
+    headers.find((h, idx) => keywords.some((k) => lower[idx]?.includes(k)));
 
   return {
     treatment: findMatch(["treatment", "condition", "drug", "agent"]),
@@ -31,7 +38,7 @@ F,0.72,0.71,0.73,0.74,0.75,0.76,0.77,0.78,0.79,0.80,0.82,0.81
 G,0.83,0.84,0.85,0.86,0.87,0.88,0.90,0.91,0.92,0.93,0.94,0.95
 H,0.96,0.97,0.98,0.99,1.00,1.01,1.02,1.03,1.04,1.05,1.06,1.07`;
 
-function looksLikePlateWide(headers: string[], rows: any[]): boolean {
+function looksLikePlateWide(headers: string[], rows: DataRow[]): boolean {
   const normalized = headers.map((h) => normalizeHeader(h));
   const hasRowHeader = normalized.includes("row") || normalized.includes("rows");
   const numericColumns = headers.filter((h) => /^\d+$/.test(h.trim()));
@@ -44,21 +51,22 @@ function looksLikeWellColumns(headers: string[]): boolean {
   return wellColumns.length >= 6; // heuristic threshold
 }
 
-function tidyPlateWide(headers: string[], rows: any[]) {
+function tidyPlateWide(headers: string[], rows: DataRow[]): TidyRow[] | null {
   const normalized = headers.map((h) => normalizeHeader(h));
   const rowKeyIndex = normalized.indexOf("row");
   if (rowKeyIndex === -1) return null;
 
   const numericColumns = headers
-    .map((h, idx) => ({ h, idx }))
+    .map((h) => ({ h }))
     .filter(({ h }) => /^\d+$/.test(h.trim()));
 
-  const tidy: Array<Record<string, any>> = [];
+  const tidy: TidyRow[] = [];
 
   rows.forEach((r) => {
-    const rowLabel = String(Object.values(r)[rowKeyIndex]).trim();
-    numericColumns.forEach(({ h, idx }) => {
-      const value = (r as any)[h];
+    const rowValues = Object.values(r);
+    const rowLabel = String(rowValues[rowKeyIndex] ?? "").trim();
+    numericColumns.forEach(({ h }) => {
+      const value = r[h];
       const well = `${rowLabel}${h}`;
       tidy.push({ Well: well, Value: value, Row: rowLabel, Column: h });
     });
@@ -67,47 +75,42 @@ function tidyPlateWide(headers: string[], rows: any[]) {
   return tidy;
 }
 
-function tidyWellColumns(headers: string[], rows: any[]) {
+function tidyWellColumns(headers: string[], rows: DataRow[]): TidyRow[] | null {
   const wellPattern = /^[A-Ha-h](?:[1-9]|1[0-2])$/;
   const wellColumns = headers
-    .map((h, idx) => ({ h, idx }))
+    .map((h) => ({ h }))
     .filter(({ h }) => wellPattern.test(h.trim()));
 
-  const tidy: Array<Record<string, any>> = [];
+  const tidy: TidyRow[] = [];
   rows.forEach((r) => {
     wellColumns.forEach(({ h }) => {
-      tidy.push({ Well: h, Value: (r as any)[h] });
+      tidy.push({ Well: h, Value: r[h] });
     });
   });
 
   return tidy.length ? tidy : null;
 }
 
-function fallbackTidy(rows: any[]) {
+function fallbackTidy(rows: DataRow[]): DataRow[] {
   return rows;
 }
 
-function formatPreview(rows: any[], limit = 8) {
+function formatPreview(rows: DataRow[], limit = 8): DataRow[] {
   if (!rows || rows.length === 0) return [];
   return rows.slice(0, limit);
 }
 
 export default function DataUploaderPage() {
-  const [rawRows, setRawRows] = useState<any[] | null>(null);
+  const [rawRows, setRawRows] = useState<DataRow[] | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
-  const [tidyRows, setTidyRows] = useState<any[] | null>(null);
-  const [mapping, setMapping] = useState<{
-    treatment?: string;
-    concentration?: string;
-    bioReplicate?: string;
-    techReplicate?: string;
-  }>({});
+  const [tidyRows, setTidyRows] = useState<TidyRow[] | null>(null);
+  const [mapping, setMapping] = useState<Mapping>({});
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   const availableColumns = useMemo(() => headers, [headers]);
 
-  function handleMappingChange(key: "treatment" | "concentration" | "bioReplicate" | "techReplicate", value: string) {
+  function handleMappingChange(key: MappingKey, value: string) {
     setMapping((m) => ({ ...m, [key]: value || undefined }));
   }
 
@@ -118,25 +121,25 @@ export default function DataUploaderPage() {
     setTidyRows(null);
 
     try {
-      let rows: any[] = [];
+      let rows: DataRow[] = [];
 
       if (file.name.endsWith(".csv") || file.type === "text/csv") {
         const text = await file.text();
-        const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+        const result = Papa.parse<DataRow>(text, { header: true, skipEmptyLines: true });
         if (result.errors.length) {
           throw new Error(result.errors[0].message);
         }
-        rows = result.data as any[];
+        rows = result.data;
       } else if (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) {
         const buffer = await file.arrayBuffer();
         const workbook = XLSX.read(buffer, { type: "array" });
         const firstSheet = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheet];
-        rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" }) as any[];
+        rows = XLSX.utils.sheet_to_json<DataRow>(worksheet, { defval: "" });
       } else if (file.type === "text/plain") {
         const text = await file.text();
-        const result = Papa.parse(text, { header: true, skipEmptyLines: true });
-        rows = result.data as any[];
+        const result = Papa.parse<DataRow>(text, { header: true, skipEmptyLines: true });
+        rows = result.data;
       } else {
         throw new Error("Unsupported file type. Please upload CSV or Excel.");
       }
@@ -146,7 +149,7 @@ export default function DataUploaderPage() {
       const guesses = inferColumns(headerList);
       setMapping(guesses);
 
-      let tidy: any[] | null = null;
+      let tidy: TidyRow[] | null = null;
       if (looksLikePlateWide(headerList, rows)) {
         tidy = tidyPlateWide(headerList, rows);
         setStatus("Detected plate-shaped wide data. Converted to tidy long-form.");
@@ -160,16 +163,17 @@ export default function DataUploaderPage() {
 
       setRawRows(rows);
       setTidyRows(tidy);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err?.message || "Failed to parse file");
+      const message = err instanceof Error ? err.message : "Failed to parse file";
+      setError(message);
       setStatus("");
     }
   }
 
   function loadSample() {
-    const result = Papa.parse(samplePlateCsv, { header: true, skipEmptyLines: true });
-    const rows = result.data as any[];
+    const result = Papa.parse<DataRow>(samplePlateCsv, { header: true, skipEmptyLines: true });
+    const rows = result.data;
     const headerList = rows.length ? Object.keys(rows[0]) : [];
     setHeaders(headerList);
     const guesses = inferColumns(headerList);
@@ -346,7 +350,7 @@ export default function DataUploaderPage() {
                     {tidyPreview.map((row, idx) => (
                       <tr key={`tidy-row-${idx}`}>
                         {Object.keys(tidyPreview[0]).map((h) => (
-                          <td key={`tidy-${idx}-${h}`} style={{ padding: "8px 10px", fontSize: 13 }}>{String((row as any)[h] ?? "")}</td>
+                          <td key={`tidy-${idx}-${h}`} style={{ padding: "8px 10px", fontSize: 13 }}>{String(row[h] ?? "")}</td>
                         ))}
                       </tr>
                     ))}

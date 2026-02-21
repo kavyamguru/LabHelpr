@@ -41,8 +41,9 @@ export default function CreateProjectForm() {
       setName("");
       setDescription("");
       router.refresh(); // refresh server component data
-    } catch (err: any) {
-      setError(err.message || "Something went wrong.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
     } finally {
       setLoading(false);
     }

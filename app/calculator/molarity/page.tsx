@@ -4,15 +4,19 @@ import { useMemo, useState } from "react";
 import { molecularWeightFromFormula } from "../../../lib/lab/molecularWeight";
 import CalcActions from "../_components/CalcActions";
 
-type VolUnit = "µL" | "mL" | "L";
+type VolUnit = "pL" | "nL" | "µL" | "mL" | "L";
 const VOL_TO_L: Record<VolUnit, number> = {
+  pL: 1e-12,
+  nL: 1e-9,
   "µL": 1e-6,
   mL: 1e-3,
   L: 1,
 };
 
-type ConcUnit = "nM" | "µM" | "mM" | "M";
+type ConcUnit = "fM" | "pM" | "nM" | "µM" | "mM" | "M";
 const CONC_TO_M: Record<ConcUnit, number> = {
+  fM: 1e-15,
+  pM: 1e-12,
   nM: 1e-9,
   "µM": 1e-6,
   mM: 1e-3,
@@ -173,9 +177,11 @@ export default function MolarityPage() {
             style={{ padding: 8, width: 160 }}
           />
           <select value={volUnit} onChange={(e) => setVolUnit(e.target.value as VolUnit)}>
-            <option value="µL">µL</option>
-            <option value="mL">mL</option>
-            <option value="L">L</option>
+            {Object.keys(VOL_TO_L).map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -194,10 +200,11 @@ export default function MolarityPage() {
               value={targetConcUnit}
               onChange={(e) => setTargetConcUnit(e.target.value as ConcUnit)}
             >
-              <option value="nM">nM</option>
-              <option value="µM">µM</option>
-              <option value="mM">mM</option>
-              <option value="M">M</option>
+              {Object.keys(CONC_TO_M).map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
             </select>
           </div>
         ) : (
@@ -237,10 +244,11 @@ export default function MolarityPage() {
               {fmt(fromM(result.molarity_M, outConcUnit), 6)} {outConcUnit}
             </span>
             <select value={outConcUnit} onChange={(e) => setOutConcUnit(e.target.value as ConcUnit)}>
-              <option value="nM">nM</option>
-              <option value="µM">µM</option>
-              <option value="mM">mM</option>
-              <option value="M">M</option>
+              {Object.keys(CONC_TO_M).map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -262,4 +270,3 @@ export default function MolarityPage() {
     </main>
   );
 }
-

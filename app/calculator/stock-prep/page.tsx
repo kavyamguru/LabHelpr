@@ -5,8 +5,8 @@ import CalcActions from "../_components/CalcActions";
 
 type Mode = "molar" | "percent-wv" | "percent-vv";
 
-type VolUnit = "mL" | "L";
-const VOL_TO_ML: Record<VolUnit, number> = { mL: 1, L: 1000 };
+type VolUnit = "pL" | "nL" | "µL" | "mL" | "L";
+const VOL_TO_ML: Record<VolUnit, number> = { pL: 1e-9, nL: 1e-6, "µL": 1e-3, mL: 1, L: 1000 };
 
 function fmt(x: number, maxFrac = 4) {
   if (!Number.isFinite(x)) return "—";
@@ -111,8 +111,11 @@ export default function StockPrepPage() {
             value={finalVolUnit}
             onChange={(e) => setFinalVolUnit(e.target.value as VolUnit)}
           >
-            <option value="mL">mL</option>
-            <option value="L">L</option>
+            {Object.keys(VOL_TO_ML).map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -173,7 +176,7 @@ export default function StockPrepPage() {
           </>
         ) : (
           <div>
-            <strong>Weigh:</strong> {fmt(result.grams ?? 0, 4)} g{" "}
+            <strong>Weigh:</strong> {fmt(result.grams ?? 0, 4)} g {" "}
             <span style={{ opacity: 0.7 }}>
               (bring up to {fmt(result.V_ml ?? 0, 2)} mL)
             </span>
@@ -197,4 +200,3 @@ export default function StockPrepPage() {
     </main>
   );
 }
-
