@@ -8,30 +8,34 @@ function fmt(x: number, maxFrac = 2) {
   return x.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
 }
 
+type RadiusUnit = "cm" | "mm";
+const RADIUS_TO_CM: Record<RadiusUnit, number> = { cm: 1, mm: 0.1 };
+
 export default function CentrifugePage() {
   const [mode, setMode] = useState<"rpm-to-rcf" | "rcf-to-rpm">("rpm-to-rcf");
-  const [radiusCm, setRadiusCm] = useState(10); // typical rotor radius
+  const [radius, setRadius] = useState(10); // default 10 cm
+  const [radiusUnit, setRadiusUnit] = useState<RadiusUnit>("cm");
   const [rpm, setRpm] = useState(12000);
   const [rcf, setRcf] = useState(10000);
 
-  const hasInvalid = radiusCm <= 0 || (mode === "rpm-to-rcf" ? rpm < 0 : rcf < 0);
+  const hasInvalid = radius <= 0 || (mode === "rpm-to-rcf" ? rpm < 0 : rcf < 0);
 
   const result = useMemo(() => {
-    const r = Number(radiusCm) || 0;
+    const rCm = (Number(radius) || 0) * RADIUS_TO_CM[radiusUnit];
 
     // constant in formula
     const k = 1.118e-5;
 
     if (mode === "rpm-to-rcf") {
       const RPM = Number(rpm) || 0;
-      const RCF = k * r * RPM * RPM;
+      const RCF = k * rCm * RPM * RPM;
       return { RCF };
     } else {
       const RCF = Number(rcf) || 0;
-      const RPM = r <= 0 ? 0 : Math.sqrt(RCF / (k * r));
+      const RPM = rCm <= 0 ? 0 : Math.sqrt(RCF / (k * rCm));
       return { RPM };
     }
-  }, [mode, radiusCm, rpm, rcf]);
+  }, [mode, radius, radiusUnit, rpm, rcf]);
 
   return (
     <main className="calc-page">
@@ -62,14 +66,18 @@ export default function CentrifugePage() {
 
       <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <label style={{ width: 160 }}>Rotor radius (cm)</label>
+          <label style={{ width: 160 }}>Rotor radius</label>
           <input
             type="number"
             onFocus={(e) => e.currentTarget.select()}
-            value={radiusCm}
-            onChange={(e) => setRadiusCm(Number(e.target.value))}
-            style={{ padding: 8, width: 160 }}
+            value={radius}
+            onChange={(e) => setRadius(Number(e.target.value))}
+            style={{ padding: 8, width: 140 }}
           />
+          <select value={radiusUnit} onChange={(e) => setRadiusUnit(e.target.value as RadiusUnit)}>
+            <option value="cm">cm</option>
+            <option value="mm">mm</option>
+          </select>
         </div>
 
         {mode === "rpm-to-rcf" ? (

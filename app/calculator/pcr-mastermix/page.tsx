@@ -5,18 +5,26 @@ import CalcActions from "../_components/CalcActions";
 
 type Reagent = {
   name: string;
-  perRxn: number; // µL
+  perRxn: number; // stored in µL
   includeInMix: boolean;
 };
+
+type VolUnit = "nL" | "µL" | "mL";
+const VOL_TO_UL: Record<VolUnit, number> = { nL: 1e-3, "µL": 1, mL: 1000 };
 
 function fmt(x: number, maxFrac = 2) {
   if (!Number.isFinite(x)) return "—";
   return x.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
 }
 
+function convertVolume(valueUL: number, unit: VolUnit) {
+  return valueUL / VOL_TO_UL[unit];
+}
+
 export default function PCRMastermixPage() {
   const [reactions, setReactions] = useState(10);
   const [extraPercent, setExtraPercent] = useState(10);
+  const [displayUnit, setDisplayUnit] = useState<VolUnit>("µL");
 
   const [reagents, setReagents] = useState<Reagent[]>([
     { name: "Water", perRxn: 12.5, includeInMix: true },
@@ -36,17 +44,17 @@ export default function PCRMastermixPage() {
 
   const totals = useMemo(() => {
     const rows = reagents.map((r) => {
-      const total = r.perRxn * multiplier;
-      return { ...r, total };
+      const totalUL = r.perRxn * multiplier;
+      return { ...r, totalUL };
     });
 
-    const totalMix = rows
+    const totalMixUL = rows
       .filter((r) => r.includeInMix)
-      .reduce((sum, r) => sum + r.total, 0);
+      .reduce((sum, r) => sum + r.totalUL, 0);
 
-    const totalAll = rows.reduce((sum, r) => sum + r.total, 0);
+    const totalAllUL = rows.reduce((sum, r) => sum + r.totalUL, 0);
 
-    return { rows, totalMix, totalAll };
+    return { rows, totalMixUL, totalAllUL };
   }, [reagents, multiplier]);
 
   function updateReagent(idx: number, patch: Partial<Reagent>) {
@@ -70,8 +78,7 @@ export default function PCRMastermixPage() {
     <main className="calc-page">
       <h1>PCR Mastermix</h1>
       <p style={{ opacity: 0.8 }}>
-        Enter per-reaction volumes (µL). We’ll multiply by number of reactions +
-        extra percent to avoid running short.
+        Enter per-reaction volumes and we’ll multiply by reaction count plus overage.
       </p>
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 16 }}>
@@ -99,6 +106,16 @@ export default function PCRMastermixPage() {
           />
         </div>
 
+        <div>
+          <label>Display unit</label>
+          <br />
+          <select value={displayUnit} onChange={(e) => setDisplayUnit(e.target.value as VolUnit)} style={{ padding: 8, width: 140 }}>
+            <option value="µL">µL</option>
+            <option value="nL">nL</option>
+            <option value="mL">mL</option>
+          </select>
+        </div>
+
         <div style={{ alignSelf: "end", opacity: 0.8 }}>
           Multiplier: <strong>{fmt(multiplier, 2)}</strong> reactions equivalent
         </div>
@@ -111,7 +128,7 @@ export default function PCRMastermixPage() {
               <th style={{ padding: 8 }}>Reagent</th>
               <th style={{ padding: 8 }}>Per reaction (µL)</th>
               <th style={{ padding: 8 }}>Include in master mix?</th>
-              <th style={{ padding: 8 }}>Total (µL)</th>
+              <th style={{ padding: 8 }}>Total ({displayUnit})</th>
               <th style={{ padding: 8 }} />
             </tr>
           </thead>
@@ -143,7 +160,7 @@ export default function PCRMastermixPage() {
                   Yes
                 </td>
                 <td style={{ padding: 8 }}>
-                  {fmt(r.total, 2)}
+                  {fmt(convertVolume(r.totalUL, displayUnit), 3)}
                 </td>
                 <td style={{ padding: 8 }}>
                   <button onClick={() => removeReagent(idx)}>Remove</button>
@@ -162,11 +179,11 @@ export default function PCRMastermixPage() {
 
       <div style={{ marginTop: 18 }}>
         <div>
-          <strong>Total master mix volume:</strong> {fmt(totals.totalMix, 2)} µL{" "}
+          <strong>Total master mix volume:</strong> {fmt(convertVolume(totals.totalMixUL, displayUnit), 3)} {displayUnit}{" "}
           <span style={{ opacity: 0.7 }}>(excluding items unchecked)</span>
         </div>
         <div style={{ marginTop: 6 }}>
-          <strong>Total volume including everything:</strong> {fmt(totals.totalAll, 2)} µL
+          <strong>Total volume including everything:</strong> {fmt(convertVolume(totals.totalAllUL, displayUnit), 3)} {displayUnit}
         </div>
       </div>
 
@@ -178,10 +195,9 @@ export default function PCRMastermixPage() {
         copyText={
           hasInvalid
             ? undefined
-            : `PCR Mastermix\nTotal master mix: ${totals.totalMix} µL\nTotal all reagents: ${totals.totalAll} µL`
+            : `PCR Mastermix\nTotal master mix: ${convertVolume(totals.totalMixUL, displayUnit)} ${displayUnit}\nTotal all reagents: ${convertVolume(totals.totalAllUL, displayUnit)} ${displayUnit}`
         }
       />
     </main>
   );
 }
-
