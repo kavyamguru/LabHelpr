@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Papa from "papaparse";
 import { toPng, toSvg } from "html-to-image";
 import JSZip from "jszip";
@@ -54,8 +54,9 @@ Treatment,B2,T1,4.7,ng/mL`;
 
 function parsePastedData(input: string): RawRow[] {
   if (!input.trim()) return [];
-  const parsed = Papa.parse<string[]>(input.trim(), {
-    delimiter: /,|\t/,
+  const normalized = input.replace(/\t/g, ",");
+  const parsed = Papa.parse<string[]>(normalized.trim(), {
+    delimiter: ",",
     skipEmptyLines: true,
   });
   const rows: RawRow[] = [];
@@ -394,15 +395,15 @@ export default function StatisticalAnalysisPage() {
           .join("");
       };
 
-      await addText("raw_input.csv", rawInput, hashes);
+      await addText("raw_input.csv", rawInput);
 
       const cleanedCsv = ["group,bio_rep,tech_rep,value,unit"].concat(
         usable.map((r) => `${r.group ?? ""},${r.bioRep ?? ""},${r.techRep ?? ""},${r.value ?? ""},${r.unit ?? ""}`)
       );
-      await addText("cleaned_data.csv", cleanedCsv.join("\n"), hashes);
+      await addText("cleaned_data.csv", cleanedCsv.join("\n"));
 
       const replicateMap = usable.map((r) => ({ group: r.group, bio_rep: r.bioRep, tech_rep: r.techRep, value: r.value, unit: r.unit }));
-      await addText("replicate_mapping.json", JSON.stringify(replicateMap, null, 2), hashes);
+      await addText("replicate_mapping.json", JSON.stringify(replicateMap, null, 2));
 
       const decisions = {
         missingHandling,
@@ -417,7 +418,7 @@ export default function StatisticalAnalysisPage() {
         removedRows: removed,
         notes: ["SEM/CI use n_bio", "Normality hint heuristic only"],
       };
-      await addText("decisions.json", JSON.stringify(decisions, null, 2), hashes);
+      await addText("decisions.json", JSON.stringify(decisions, null, 2));
 
       const resultsJson = stats.map((g) => ({
         group: g.group,
@@ -437,7 +438,7 @@ export default function StatisticalAnalysisPage() {
         normality: g.normality,
         iqrMultiplier: g.iqrMultiplier,
       }));
-      await addText("results.json", JSON.stringify(resultsJson, null, 2), hashes);
+      await addText("results.json", JSON.stringify(resultsJson, null, 2));
 
       const resultsCsvHeader = "group,n_bio,n_tech,mean,median,sd,variance,sem,cv,min,max,range,ci95_low,ci95_high,ci_df";
       const resultsCsv = [
@@ -462,12 +463,12 @@ export default function StatisticalAnalysisPage() {
           ].join(",")
         ),
       ];
-      await addText("results.csv", resultsCsv.join("\n"), hashes);
+      await addText("results.csv", resultsCsv.join("\n"));
 
-      await addText("methods.md", `# Methods\n${methodsSnippet}\n`, hashes);
-      await addText("results.md", `# Results\n${resultsSnippet}\n`, hashes);
+      await addText("methods.md", `# Methods\n${methodsSnippet}\n`);
+      await addText("results.md", `# Results\n${resultsSnippet}\n`);
 
-      const pngSvg = async (ref: React.RefObject<HTMLDivElement>, name: string) => {
+      const pngSvg = async (ref: React.RefObject<HTMLDivElement | null>, name: string) => {
         if (!ref.current) return;
         const pngUrl = await toPng(ref.current, { pixelRatio: 3 });
         const svgUrl = await toSvg(ref.current, { pixelRatio: 3 });
@@ -494,7 +495,7 @@ export default function StatisticalAnalysisPage() {
         hashes,
         options: computeOpts,
       };
-      await addText("manifest.json", JSON.stringify(manifest, null, 2), hashes);
+      await addText("manifest.json", JSON.stringify(manifest, null, 2));
 
       const content = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a");
