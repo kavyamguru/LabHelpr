@@ -5,12 +5,31 @@ import type { NextRequest } from "next/server";
 const ALLOWED_PREFIXES = [
   "/calculator",
   "/_next",
-  "/favicon.ico",
-  "/vercel.svg",
-  "/robots.txt",
-  "/sitemap.xml",
-  "/manifest.json",
 ];
+
+const STATIC_EXTENSIONS = [
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".webp",
+  ".avif",
+  ".ico",
+  ".txt",
+  ".xml",
+  ".json",
+  ".js",
+  ".css",
+  ".map",
+  ".woff",
+  ".woff2",
+  ".ttf",
+];
+
+function isStaticAsset(pathname: string) {
+  return STATIC_EXTENSIONS.some((ext) => pathname.toLowerCase().endsWith(ext));
+}
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -23,8 +42,8 @@ export function middleware(req: NextRequest) {
   }
 
   // Allow calculator and static/runtime assets
-  const isAllowed = ALLOWED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));
-  if (isAllowed) {
+  const allowedPrefix = ALLOWED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  if (allowedPrefix || isStaticAsset(pathname)) {
     return NextResponse.next();
   }
 
