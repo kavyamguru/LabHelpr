@@ -1,10 +1,10 @@
 "use client";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend } from "chart.js";
-import { BoxPlotController, ViolinController, BoxAndViolinPlotElements } from "chartjs-chart-box-and-violin-plot";
-import { Bar, Scatter } from "react-chartjs-2";
+import { BoxPlot, Violin, BoxAndWhiskers, ArrayLinearScale, ArrayLogarithmicScale, HorizontalBoxPlot, HorizontalViolin } from "chartjs-chart-box-and-violin-plot";
+import { Bar, Scatter, Chart as ReactChart } from "react-chartjs-2";
 import { ReactNode } from "react";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, BoxPlotController, ViolinController, BoxAndViolinPlotElements);
+ChartJS.register(CategoryScale, LinearScale, ArrayLinearScale as any, ArrayLogarithmicScale as any, PointElement, LineElement, BarElement, Tooltip, Legend, BoxPlot as any, BoxAndWhiskers as any, Violin as any, HorizontalBoxPlot as any, HorizontalViolin as any);
 
 export function ChartContainer({ children }: { children: ReactNode }) {
   return <div style={{ width: "100%", maxWidth: "100%" }}>{children}</div>;
@@ -73,7 +73,8 @@ export function ViolinPlotChart({ labels, violins }: { labels: string[]; violins
     ],
   };
   return (
-    <Bar
+    <ReactChart
+      type={"violin" as any}
       data={data}
       options={{
         indexAxis: "x",
@@ -82,13 +83,7 @@ export function ViolinPlotChart({ labels, violins }: { labels: string[]; violins
         animation: false,
         plugins: { legend: { display: false } },
         scales: { x: {}, y: { title: { display: true, text: "Response" } } },
-        elements: {
-          violin: {
-            // leave bandwidth to library defaults to avoid over-smoothing small n
-          },
-        },
       }}
-      type="violin"
     />
   );
 }

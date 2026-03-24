@@ -1,6 +1,6 @@
 "use client";
 import { HistogramChart, StripChart, QQChart } from "./ChartWrapper";
-import { HistogramData, StripData, QQData } from "../../../lib/stats/descriptive/chartData";
+import { HistogramData, StripData, QQData } from "../../../../lib/stats/descriptive/chartData";
 
 export function HistogramPlot({ data }: { data: HistogramData }) {
   if (!data.series.length) return <div style={{ fontSize: 13 }}>Not enough data for histogram.</div>;

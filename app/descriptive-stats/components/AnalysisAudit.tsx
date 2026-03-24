@@ -1,5 +1,5 @@
 "use client";
-import { ExportPayload } from "../../lib/stats/descriptive/exportTypes";
+import { ExportPayload } from "../../../lib/stats/descriptive/exportTypes";
 
 export function AnalysisAudit({ payload }: { payload: ExportPayload }) {
   return (

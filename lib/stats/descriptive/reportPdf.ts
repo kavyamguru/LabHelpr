@@ -1,11 +1,11 @@
 import jsPDF from "jspdf";
 import { ExportPayload } from "./exportTypes";
 
-export function exportPdf(payload: ExportPayload): Uint8Array {
+export function exportPdf(payload: ExportPayload): ArrayBuffer {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   let y = 30;
   const addLine = (text: string, opts?: { bold?: boolean }) => {
-    if (opts?.bold) doc.setFont(undefined, "bold"); else doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
     doc.text(text, 40, y);
     y += 16;
   };
@@ -49,7 +49,7 @@ export function exportPdf(payload: ExportPayload): Uint8Array {
   addLine("Technical replicates are not biological n. Outliers were flagged, not removed. Missing values excluded per-metric.");
   addLine("This report is descriptive, not inferential.");
 
-  return doc.output("arraybuffer") as Uint8Array;
+  return doc.output("arraybuffer") as ArrayBuffer;
 }
 
 function fmt(v: any): string {

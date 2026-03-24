@@ -1,6 +1,8 @@
 import { ColumnGuesses, DataRow, DEFAULT_MISSING_TOKENS } from "../../data/ingestion";
 import { NormalizedRow } from "./types";
 
+const missingSet = new Set(DEFAULT_MISSING_TOKENS.map((t) => t.toLowerCase()));
+
 function toNullIfMissing(val: unknown): string | null {
   if (val === null || val === undefined) return null;
   if (typeof val === "string" && missingSet.has(val.trim().toLowerCase())) return null;
@@ -38,13 +40,19 @@ export function normalizeRows(rows: DataRow[], mapping: ColumnGuesses, missingTo
     const bioRep = toNullIfMissing(getValue(mapping.bioRep));
     const techRep = toNullIfMissing(getValue(mapping.techRep));
 
+    const doseRaw = getValue(mapping.dose);
+    const timeRaw = getValue(mapping.time);
+
+    const dose = typeof doseRaw === "number" ? doseRaw : typeof doseRaw === "string" && doseRaw.trim() !== "" ? doseRaw : null;
+    const timepoint = typeof timeRaw === "number" ? timeRaw : typeof timeRaw === "string" && timeRaw.trim() !== "" ? timeRaw : null;
+
     return {
       sampleId: toNullIfMissing(getValue(mapping.sampleId)),
       response: responseNum,
       group: toNullIfMissing(getValue(mapping.group)),
       condition: toNullIfMissing(getValue(mapping.group)),
-      dose: getValue(mapping.dose) ?? null,
-      timepoint: getValue(mapping.time) ?? null,
+      dose,
+      timepoint,
       bioRep,
       techRep,
       batch: toNullIfMissing(getValue(mapping.batch)),

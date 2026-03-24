@@ -1,11 +1,11 @@
 "use client";
 import { RefObject } from "react";
-import htmlToImage from "html-to-image";
+import { toPng } from "html-to-image";
 
-export function PlotExportButton({ targetRef, label, filenameBase }: { targetRef: RefObject<HTMLElement>; label: string; filenameBase: string }) {
+export function PlotExportButton({ targetRef, label, filenameBase }: { targetRef: RefObject<HTMLElement | null>; label: string; filenameBase: string }) {
   const handle = async () => {
     if (!targetRef.current) return;
-    const dataUrl = await htmlToImage.toPng(targetRef.current, { backgroundColor: "white", pixelRatio: 2 });
+    const dataUrl = await toPng(targetRef.current, { backgroundColor: "white", pixelRatio: 2 });
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = `${filenameBase}.png`;

@@ -1,6 +1,6 @@
 "use client";
 import { BoxPlotChart, ChartContainer, ViolinPlotChart } from "./ChartWrapper";
-import { BoxLikeData, ViolinData } from "../../../lib/stats/descriptive/chartData";
+import { BoxLikeData, ViolinData } from "../../../../lib/stats/descriptive/chartData";
 
 export function BoxPlot({ data }: { data: BoxLikeData }) {
   if (!data.labels.length) return <div style={{ fontSize: 13 }}>Not enough data for box plot.</div>;

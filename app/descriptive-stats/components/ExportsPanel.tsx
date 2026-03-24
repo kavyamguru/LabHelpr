@@ -1,14 +1,18 @@
 "use client";
 import { useState } from "react";
-import { ExportPayload } from "../../lib/stats/descriptive/exportTypes";
-import { exportCsvOverall, exportCsvByGroup, exportCsvMissing, exportCsvOutliers, exportCsvControlComparisons } from "../../lib/stats/descriptive/exportCsv";
-import { exportJson } from "../../lib/stats/descriptive/exportJson";
-import { exportPdf } from "../../lib/stats/descriptive/reportPdf";
-import { exportExcel } from "../../lib/stats/descriptive/exportExcel";
-import { buildMethodsText, buildResultsText } from "../../lib/stats/descriptive/reportText";
+import { ExportPayload } from "../../../lib/stats/descriptive/exportTypes";
+import { exportCsvOverall, exportCsvByGroup, exportCsvMissing, exportCsvOutliers, exportCsvControlComparisons } from "../../../lib/stats/descriptive/exportCsv";
+import { exportJson } from "../../../lib/stats/descriptive/exportJson";
+import { exportPdf } from "../../../lib/stats/descriptive/reportPdf";
+import { exportExcel } from "../../../lib/stats/descriptive/exportExcel";
+import { buildMethodsText, buildResultsText } from "../../../lib/stats/descriptive/reportText";
 
-function download(name: string, mime: string, data: string | Uint8Array) {
-  const blob = typeof data === "string" ? new Blob([data], { type: mime }) : new Blob([data], { type: mime });
+function download(name: string, mime: string, data: string | Uint8Array | ArrayBuffer) {
+  const blob = typeof data === "string"
+    ? new Blob([data], { type: mime })
+    : data instanceof ArrayBuffer
+      ? new Blob([data], { type: mime })
+      : new Blob([new Uint8Array(data)], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

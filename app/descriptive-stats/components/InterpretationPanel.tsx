@@ -1,5 +1,5 @@
 "use client";
-import { InterpretationBlock } from "../../lib/stats/descriptive/interpret";
+import { InterpretationBlock } from "../../../lib/stats/descriptive/interpret";
 
 export function InterpretationPanel({ blocks }: { blocks: InterpretationBlock[] }) {
   if (!blocks.length) return <div style={{ fontSize: 13 }}>No interpretation available yet.</div>;
