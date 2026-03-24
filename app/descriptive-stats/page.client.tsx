@@ -15,9 +15,8 @@ import {
 } from "../../lib/data/ingestion";
 import { computeDescriptiveStats } from "../../lib/stats/descriptive/index";
 import { DescriptiveResult, ReplicateMode } from "../../lib/stats/descriptive/types";
-import { buildHistogramData, buildHistogramFacets, buildBoxData, buildViolinData, buildStripData, buildQQData, buildBioTechData } from "../../lib/stats/descriptive/chartData";
+import { buildHistogramData, buildHistogramFacets, buildStripData, buildQQData, buildBioTechData } from "../../lib/stats/descriptive/chartData";
 import { HistogramPlot, StripPlot, QQPlot } from "./components/plots/SimplePlots";
-import { BoxPlot, ViolinPlot } from "./components/plots/SummaryPlots";
 import { BioTechPlot } from "./components/plots/BioTechPlot";
 import { PlotExportButton } from "./components/PlotExportButton";
 import { InterpretationPanel } from "./components/InterpretationPanel";
@@ -27,21 +26,24 @@ import { ExportsPanel } from "./components/ExportsPanel";
 import { AnalysisAudit } from "./components/AnalysisAudit";
 import { buildExportPayload } from "../../lib/stats/descriptive/buildExportPayload";
 
-const mappingOrder: Array<{ key: keyof ColumnGuesses; label: string; helper?: string }> = [
-  { key: "response", label: "Response / measurement", helper: "Numeric outcome column" },
-  { key: "group", label: "Condition / treatment" },
-  { key: "dose", label: "Concentration / dose" },
-  { key: "time", label: "Timepoint" },
-  { key: "bioRep", label: "Biological replicate ID" },
-  { key: "techRep", label: "Technical replicate ID" },
+const essentialMappingOrder: Array<{ key: keyof ColumnGuesses; label: string; helper?: string; required?: boolean }> = [
+  { key: "response", label: "Response / measurement", helper: "Numeric outcome column", required: true },
+  { key: "group", label: "Condition / treatment", helper: "Group/condition label", required: true },
+  { key: "bioRep", label: "Biological replicate ID", helper: "Biological replicate identifier" },
+  { key: "techRep", label: "Technical replicate ID", helper: "Technical replicate identifier" },
+  { key: "dose", label: "Dose / concentration", helper: "Optional concentration" },
+  { key: "time", label: "Timepoint", helper: "Optional timepoint" },
+];
+
+const optionalMappingOrder: Array<{ key: keyof ColumnGuesses; label: string; helper?: string }> = [
+  { key: "controlFlag", label: "Control flag", helper: "Mark control rows" },
+  { key: "units", label: "Units", helper: "Measurement units" },
   { key: "batch", label: "Batch / experiment date" },
   { key: "plate", label: "Plate ID" },
   { key: "well", label: "Well ID" },
   { key: "sampleId", label: "Sample ID" },
   { key: "cellLine", label: "Cell line" },
   { key: "genotype", label: "Genotype" },
-  { key: "controlFlag", label: "Control flag" },
-  { key: "units", label: "Units" },
 ];
 
 function MappingSelect({
@@ -106,6 +108,8 @@ function DescriptiveStatsClient() {
   const [mapping, setMapping] = useState<ColumnGuesses>({});
   const [replicateMode, setReplicateMode] = useState<ReplicateMode>("nested");
   const [collapseTechnical, setCollapseTechnical] = useState<boolean>(true);
+  const [showAdvancedMapping, setShowAdvancedMapping] = useState<boolean>(false);
+
   const [audit, setAudit] = useState<AnalysisAudit>({
     sourceType: "pasted",
     originalColumns: [],
@@ -124,8 +128,6 @@ function DescriptiveStatsClient() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const histRef = useRef<HTMLDivElement | null>(null);
-  const boxRef = useRef<HTMLDivElement | null>(null);
-  const violinRef = useRef<HTMLDivElement | null>(null);
   const stripRef = useRef<HTMLDivElement | null>(null);
   const qqRef = useRef<HTMLDivElement | null>(null);
   const bioTechRef = useRef<HTMLDivElement | null>(null);
@@ -226,6 +228,12 @@ function DescriptiveStatsClient() {
     return { groups: labels.length, labels };
   }, [normalized, mapping.group]);
 
+  useEffect(() => {
+    if (!controlGroup && groupCounts.labels.includes("Control")) {
+      setControlGroup("Control");
+    }
+  }, [groupCounts.labels, controlGroup]);
+
   const bioTechCounts = useMemo(() => {
     if (!normalized) return { nBio: 0, nTech: 0, avgTechPerBio: 0 };
     const bioKey = mapping.bioRep;
@@ -283,16 +291,19 @@ function DescriptiveStatsClient() {
 
   const histogramData = useMemo(() => (descriptive ? buildHistogramData(descriptive.analysisRows) : null), [descriptive]);
   const histogramFacets = useMemo(() => (descriptive ? buildHistogramFacets(descriptive.analysisRows) : {}), [descriptive]);
-  const boxData = useMemo(() => (descriptive ? buildBoxData(descriptive.analysisRows) : null), [descriptive]);
-  const violinData = useMemo(() => (descriptive ? buildViolinData(descriptive.analysisRows) : null), [descriptive]);
   const stripData = useMemo(() => (descriptive ? buildStripData(descriptive.analysisRows) : null), [descriptive]);
   const qqData = useMemo(() => (descriptive ? buildQQData(descriptive.analysisRows) : null), [descriptive]);
   const bioTechData = useMemo(() => (descriptive ? buildBioTechData(descriptive.analysisRows, descriptive.audit.replicateMode, descriptive.audit.collapseTechnical) : null), [descriptive]);
   const exportPayload = useMemo(() => (descriptive ? buildExportPayload(descriptive, { controlGroup, units: descriptive.audit.mapping.units ?? null }) : null), [descriptive, controlGroup]);
+  const controlMean = useMemo(() => {
+    if (!descriptive || !controlGroup) return null;
+    const g = descriptive.byGroup.find((g) => g.group === controlGroup);
+    return g?.stats.mean ?? null;
+  }, [descriptive, controlGroup]);
 
   return (
-    <main className="calc-page" style={{ maxWidth: 1180 }}>
-      <header className="calc-card" style={{ marginBottom: 12 }}>
+    <main className="calc-page" style={{ maxWidth: 1180, paddingBottom: 16 }}>
+      <header className="calc-card" style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div>
             <div className="badge" style={{ marginBottom: 8 }}>Phase 1 · Ingestion & Mapping</div>
@@ -305,11 +316,12 @@ function DescriptiveStatsClient() {
         </div>
       </header>
 
-      <section className="calc-card" style={{ marginBottom: 12 }}>
-        <div className="section-title">1) Upload / Import</div>
+      <section className="calc-card" style={{ marginBottom: 16 }}>
+        <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>1) Upload / Import</div>
+        <p style={{ marginTop: 4, color: "#4b5563", fontSize: 13, lineHeight: 1.5 }}>CSV recommended; Excel supported with shape/size limits. Accepted: CSV/TSV/plain text tables; plate-style wide tables; long-form tables.</p>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
           <div>
-            <label className="label" style={{ marginBottom: 6, fontWeight: 700 }}>Paste data (CSV, TSV, or comma/tab-separated)</label>
+            <label className="label" style={{ marginBottom: 6, fontWeight: 700 }}>Paste data (CSV, TSV, comma/tab-separated)</label>
             <textarea
               className="input"
               style={{ width: "100%", minHeight: 160, fontFamily: "monospace" }}
@@ -335,13 +347,16 @@ function DescriptiveStatsClient() {
               <button className="ghost-button" type="button" onClick={() => { setRawText(ELISA_SAMPLE); handleParseText(ELISA_SAMPLE, "ELISA sample", "pasted"); }}>Load ELISA sample</button>
               <button className="ghost-button" type="button" onClick={() => { setRawText(PLATE_SAMPLE); handleParseText(PLATE_SAMPLE, "Plate sample", "pasted"); }}>Load plate sample</button>
             </div>
+            <div style={{ marginTop: 6, color: "#4b5563", fontSize: 12 }}>
+              Example formats: long (group,bio_rep,tech_rep,value,unit), wide plate (Row + A1–H12 numeric), or generic CSV/TSV with headers.
+            </div>
             {status && <div style={{ marginTop: 6, color: "#166534", fontWeight: 600 }}>{status}</div>}
             {error && <div style={{ marginTop: 6, color: "#b91c1c", fontWeight: 600 }}>{error}</div>}
           </div>
           <div style={infoBox}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Tips (wet-lab aware)</div>
             <ul style={{ paddingLeft: 18, margin: 0, lineHeight: 1.5, fontSize: 13 }}>
-              <li>Prefer CSV upload for reliability; Excel is supported with size/shape limits.</li>
+              <li>CSV preferred for reliability; Excel supported with shape/size limits.</li>
               <li>Include biological replicate IDs; technical replicates should nest within them.</li>
               <li>Mark concentration/dose and timepoint columns if present.</li>
               <li>Plate data: include a Row header + numeric columns, or well-named columns (A1–H12).</li>
@@ -352,41 +367,74 @@ function DescriptiveStatsClient() {
       </section>
 
       {normalized && (
-        <section className="calc-card" style={{ marginBottom: 12 }}>
-          <div className="section-title">2) Map columns & replicates</div>
+        <section className="calc-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>2) Map columns & replicates</div>
+          <p style={{ marginTop: 4, color: "#4b5563", fontSize: 13, lineHeight: 1.5 }}>Map essentials first, then expand advanced fields if needed. Biological replicates are the reporting unit.</p>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
-              {mappingOrder.map((m) => (
-                <MappingSelect
-                  key={m.key}
-                  label={m.label}
-                  helper={m.helper}
-                  value={mapping[m.key]}
-                  options={headers}
-                  onChange={(v) => setMapping((prev) => ({ ...prev, [m.key]: v }))}
-                />
-              ))}
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+                {essentialMappingOrder.map((m) => (
+                  <MappingSelect
+                    key={m.key}
+                    label={m.label + (m.required ? " *" : "")}
+                    helper={m.helper}
+                    value={mapping[m.key]}
+                    options={headers}
+                    onChange={(v) => setMapping((prev) => ({ ...prev, [m.key]: v }))}
+                  />
+                ))}
+              </div>
+              <div>
+                <button type="button" className="ghost-button" onClick={() => setShowAdvancedMapping((v) => !v)}>
+                  {showAdvancedMapping ? "Hide optional/advanced mappings" : "Show optional/advanced mappings"}
+                </button>
+                {showAdvancedMapping && (
+                  <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+                    {optionalMappingOrder.map((m) => (
+                      <MappingSelect
+                        key={m.key}
+                        label={m.label}
+                        helper={m.helper}
+                        value={mapping[m.key]}
+                        options={headers}
+                        onChange={(v) => setMapping((prev) => ({ ...prev, [m.key]: v }))}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{ display: "grid", gap: 10 }}>
               <div style={infoBox}>
                 <div style={{ fontWeight: 700, marginBottom: 6 }}>Replicates</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ display: "grid", gap: 6 }}>
                   {([
-                    { key: "nested", label: "Nested (bio > tech)" },
-                    { key: "biological", label: "Biological only" },
-                    { key: "technical", label: "Technical only" },
-                    { key: "none", label: "No replicates" },
-                  ] as { key: ReplicateMode; label: string }[]).map((opt) => (
-                    <label key={opt.key} className="pill" style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", background: replicateMode === opt.key ? "#eef2ff" : "#f8fafc", border: "1px solid #e5e7eb", padding: "6px 10px", borderRadius: 999 }}>
+                    { key: "nested", label: "Nested (bio > tech)", desc: "Biological reps with nested technical reps (recommended)" },
+                    { key: "biological", label: "Biological only", desc: "Only biological replicate IDs provided" },
+                    { key: "technical", label: "Technical only", desc: "Only technical replicate IDs (bio inference limited)" },
+                    { key: "none", label: "No replicates", desc: "Treat every row as independent measurement" },
+                  ] as { key: ReplicateMode; label: string; desc: string }[]).map((opt) => (
+                    <label key={opt.key} className="pill" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", background: replicateMode === opt.key ? "#eef2ff" : "#f8fafc", border: "1px solid #e5e7eb", padding: "6px 10px", borderRadius: 12 }}>
                       <input type="radio" name="repMode" value={opt.key} checked={replicateMode === opt.key} onChange={() => setReplicateMode(opt.key)} />
-                      {opt.label}
+                      <div>
+                        <div style={{ fontWeight: 700 }}>{opt.label}</div>
+                        <div style={{ fontSize: 12, color: "#4b5563" }}>{opt.desc}</div>
+                      </div>
                     </label>
                   ))}
                 </div>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-                  <input type="checkbox" checked={collapseTechnical} onChange={(e) => setCollapseTechnical(e.target.checked)} />
-                  Collapse technical replicates into biological means
-                </label>
+                {replicateMode !== "none" && (
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                    <input type="checkbox" checked={collapseTechnical} onChange={(e) => setCollapseTechnical(e.target.checked)} />
+                    <span>Average technical replicates within each biological replicate before group summaries</span>
+                  </label>
+                )}
+                {replicateMode === "technical" && (
+                  <div style={{ marginTop: 8, color: "#b45309", fontSize: 12, fontWeight: 700 }}>Warning: technical-only mode limits biological inference.</div>
+                )}
+                {replicateMode === "none" && (
+                  <div style={{ marginTop: 8, color: "#b45309", fontSize: 12 }}>No replicate IDs provided; each row treated independently.</div>
+                )}
               </div>
               <div style={infoBox}>
                 <div style={{ fontWeight: 700, marginBottom: 6 }}>Control group</div>
@@ -396,6 +444,12 @@ function DescriptiveStatsClient() {
                     <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
+                <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                  {controlGroup ? "Control comparisons enabled (fold/percent changes)." : "Select a control to enable comparisons."}
+                </div>
+                {controlGroup && controlMean !== null && Math.abs(controlMean) < 1e-6 && (
+                  <div style={{ marginTop: 6, color: "#b45309", fontSize: 12 }}>Warning: control mean is near zero; fold/percent changes may be unstable.</div>
+                )}
               </div>
             </div>
           </div>
@@ -403,43 +457,47 @@ function DescriptiveStatsClient() {
       )}
 
       {normalized && (
-        <section className="calc-card" style={{ marginBottom: 12 }}>
-          <div className="section-title">3) Data quality & structure</div>
+        <section className="calc-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>3) Data quality & structure</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 10 }}>
-            <Stat label="Rows (raw)" value={`${rowCounts.raw}`} helper="Pre-normalization" />
-            <Stat label="Rows (normalized)" value={`${rowCounts.normalized}`} helper="After cleaning" />
-            <Stat label="Rows (analysis)" value={`${rowCounts.analysis}`} helper="After replicate handling" />
+            <Stat label="Rows (raw)" value={`${rowCounts.raw}`} helper="Pre-normalization row count" />
+            <Stat label="Rows (normalized)" value={`${rowCounts.normalized}`} helper="After cleaning: trimming whitespace, parsing numbers" />
+            <Stat label="Rows (analysis)" value={`${rowCounts.analysis}`} helper="After replicate handling (collapse tech if enabled)" />
             <Stat label="Groups" value={`${groupCounts.groups}`} helper={groupCounts.labels.join(", ") || "-"} />
             <Stat label="Bio reps" value={`${bioTechCounts.nBio}`} helper={`Tech reps: ${bioTechCounts.nTech}`} />
-            <Stat label="Avg tech per bio" value={bioTechCounts.avgTechPerBio ? bioTechCounts.avgTechPerBio.toFixed(2) : "-"} />
+            <Stat label="Avg tech per bio" value={bioTechCounts.avgTechPerBio ? bioTechCounts.avgTechPerBio.toFixed(2) : "-"} helper="Higher values indicate multiple technicals per bio rep" />
           </div>
           {descriptive?.missingness && <MissingTable missing={descriptive.missingness} />}
         </section>
       )}
 
       {descriptive && (
-        <section className="calc-card" style={{ marginBottom: 12 }}>
-          <div className="section-title">4) Summary statistics</div>
+        <section className="calc-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>4) Summary statistics</div>
           <p style={{ marginTop: 4, color: "#4b5563", fontSize: 14 }}>Overall plus per-group summaries; replicate-aware.</p>
           <SummaryTable groups={[descriptive.overall, ...descriptive.byGroup]} />
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Control comparisons</div>
             {descriptive.controlComparisons?.length ? (
-              <ul style={{ margin: 0, paddingLeft: 16 }}>
+              <ul style={{ margin: 0, paddingLeft: 16, lineHeight: 1.5 }}>
                 {descriptive.controlComparisons.map((c, idx) => (
-                  <li key={idx}>{c.group} vs {c.controlGroup}: fold {c.foldChange ?? "-"} (log2 {c.log2FoldChange ?? "-"})</li>
+                  <li key={idx}>
+                    {c.group} vs {c.controlGroup}: fold {c.foldChange ?? "-"}, percent {c.percentChange ?? "-"}, log2 {c.log2FoldChange ?? "-"}
+                    {c.warnings?.length ? ` — ${c.warnings.join("; ")}` : ""}
+                  </li>
                 ))}
               </ul>
             ) : (
-              <div style={{ fontSize: 13 }}>Set a control group to view comparisons.</div>
+              <div style={{ fontSize: 13 }}>Select a control group (e.g., "Control") to enable fold/percent comparisons.</div>
             )}
           </div>
         </section>
       )}
 
       {descriptive && (
-        <section className="calc-card" style={{ marginBottom: 12 }}>
-          <div className="section-title">5) Visualizations</div>
+        <section className="calc-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>5) Visualizations</div>
+          <p style={{ marginTop: 4, color: "#4b5563", fontSize: 13, lineHeight: 1.5 }}>Stable plots only: histogram (group overlay), strip (with outliers), Q-Q with reference line, and bio vs tech replicate view.</p>
           <div style={{ display: "grid", gap: 16 }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -447,22 +505,6 @@ function DescriptiveStatsClient() {
                 <PlotExportButton targetRef={histRef} label="Export PNG" filenameBase="histogram" />
               </div>
               <div ref={histRef as any}>{histogramData ? <HistogramPlot data={histogramData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 12 }}>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <div style={{ fontWeight: 700 }}>Box plot</div>
-                  <PlotExportButton targetRef={boxRef} label="Export PNG" filenameBase="boxplot" />
-                </div>
-                <div ref={boxRef as any}>{boxData ? <BoxPlot data={boxData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
-              </div>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <div style={{ fontWeight: 700 }}>Violin plot</div>
-                  <PlotExportButton targetRef={violinRef} label="Export PNG" filenameBase="violin" />
-                </div>
-                <div ref={violinRef as any}>{violinData ? <ViolinPlot data={violinData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
-              </div>
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -476,22 +518,25 @@ function DescriptiveStatsClient() {
                 <div style={{ fontWeight: 700 }}>Q-Q plot</div>
                 <PlotExportButton targetRef={qqRef} label="Export PNG" filenameBase="qq" />
               </div>
-              <div ref={qqRef as any}>{qqData ? <QQPlot data={qqData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+              <div ref={qqRef as any}>{qqData ? <QQPlot data={qqData} /> : <div style={{ fontSize: 13 }}>Not enough data (requires ≥5 observations). </div>}</div>
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ fontWeight: 700 }}>Bio/Tech replicate view</div>
                 <PlotExportButton targetRef={bioTechRef} label="Export PNG" filenameBase="biotech" />
               </div>
-              <div ref={bioTechRef as any}>{bioTechData ? <BioTechPlot data={bioTechData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+              <div ref={bioTechRef as any}>{bioTechData ? <BioTechPlot data={bioTechData} collapsed={collapseTechnical} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+              <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                {collapseTechnical ? "Technical replicates collapsed to biological means." : "Technical replicates shown; they are not biological n."}
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {descriptive && exportPayload && (
-        <section className="calc-card" style={{ marginBottom: 12 }}>
-          <div className="section-title">6) Interpretation & exports</div>
+        <section className="calc-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>6) Interpretation & exports</div>
           <div style={{ display: "grid", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700, marginBottom: 6 }}>Interpretation</div>
@@ -525,40 +570,53 @@ function isMissingCell(val: unknown) {
 }
 
 function SummaryTable({ groups }: { groups: any[] }) {
-  const metrics = ["n", "nonMissingCount", "missingCount", "mean", "median", "sd", "sem", "q1", "q3", "iqr", "min", "max", "range", "skewness", "kurtosis", "cvPercent", "ci95", "geometricMean", "mad"];
+  const basicMetrics = ["n", "mean", "median", "sd", "sem", "min", "max", "range", "cvPercent", "ci95"];
+  const advancedMetrics = ["variance", "q1", "q3", "iqr", "skewness", "kurtosis", "geometricMean", "mad", "trimmedMean", "nonMissingCount", "missingCount"];
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+
+  const metrics = showAdvanced ? [...basicMetrics, ...advancedMetrics] : basicMetrics;
+
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-        <thead>
-          <tr>
-            <th style={{ textAlign: "left", padding: 6 }}>Group</th>
-            {metrics.map((m) => (
-              <th key={m} style={{ textAlign: "left", padding: 6 }}>
-                <MetricTooltip label={metricLabels[m]?.label || m} description={metricLabels[m]?.description || ""}>
-                  <span>{metricLabels[m]?.label || m}</span>
-                </MetricTooltip>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {groups.map((g, idx) => (
-            <tr key={idx} style={{ borderTop: "1px solid #e5e7eb" }}>
-              <td style={{ padding: 6 }}>{g.group ?? "Overall"}</td>
-              {metrics.map((m) => {
-                const val = g.stats[m];
-                if (m === "ci95") {
-                  return <td key={m} style={{ padding: 6 }}>{val ? `${val.lower.toFixed(3)} – ${val.upper.toFixed(3)}` : "-"}</td>;
-                }
-                if (Array.isArray(val)) return <td key={m} style={{ padding: 6 }}>{val.join(", ") || "-"}</td>;
-                if (val === null || val === undefined) return <td key={m} style={{ padding: 6 }}>-</td>;
-                const num = typeof val === "number" ? Number(val) : val;
-                return <td key={m} style={{ padding: 6 }}>{typeof num === "number" ? num.toFixed(3) : String(num)}</td>;
-              })}
+    <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontWeight: 700 }}>Metrics</div>
+        <button type="button" className="ghost-button" onClick={() => setShowAdvanced((v) => !v)}>
+          {showAdvanced ? "Hide advanced metrics" : "Show advanced metrics"}
+        </button>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 720 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left", padding: 6, position: "sticky", left: 0, background: "#fff" }}>Group</th>
+              {metrics.map((m) => (
+                <th key={m} style={{ textAlign: "left", padding: 6 }}>
+                  <MetricTooltip label={metricLabels[m]?.label || m} description={metricLabels[m]?.description || ""}>
+                    <span>{metricLabels[m]?.label || m}</span>
+                  </MetricTooltip>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {groups.map((g, idx) => (
+              <tr key={idx} style={{ borderTop: "1px solid #e5e7eb" }}>
+                <td style={{ padding: 6, position: "sticky", left: 0, background: "#fff" }}>{g.group ?? "Overall"}</td>
+                {metrics.map((m) => {
+                  const val = g.stats[m];
+                  if (m === "ci95") {
+                    return <td key={m} style={{ padding: 6 }}>{val ? `${val.lower.toFixed(3)} – ${val.upper.toFixed(3)}` : "-"}</td>;
+                  }
+                  if (val === null || val === undefined) return <td key={m} style={{ padding: 6 }}>-</td>;
+                  if (Array.isArray(val)) return <td key={m} style={{ padding: 6 }}>{val.join(", ") || "-"}</td>;
+                  const num = typeof val === "number" ? Number(val) : val;
+                  return <td key={m} style={{ padding: 6 }}>{typeof num === "number" ? num.toFixed(3) : String(num)}</td>;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

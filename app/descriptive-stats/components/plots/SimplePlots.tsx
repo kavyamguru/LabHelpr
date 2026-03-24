@@ -13,6 +13,6 @@ export function StripPlot({ data }: { data: StripData }) {
 }
 
 export function QQPlot({ data }: { data: QQData | null }) {
-  if (!data) return <div style={{ fontSize: 13 }}>Not enough data for QQ plot.</div>;
+  if (!data) return <div style={{ fontSize: 13 }}>Not enough data for QQ plot (requires ≥5 observations). Visualizes deviation from Normal; points near the diagonal indicate approximate normality.</div>;
   return <QQChart points={data.points} />;
 }

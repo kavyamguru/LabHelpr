@@ -40,9 +40,9 @@ export function ExportsPanel({ payload }: { payload: ExportPayload }) {
           <button className="ghost-button" type="button" onClick={() => download("missingness.csv", "text/csv", exportCsvMissing(payload))}>CSV (missing)</button>
           <button className="ghost-button" type="button" onClick={() => download("outliers.csv", "text/csv", exportCsvOutliers(payload))}>CSV (outliers)</button>
           <button className="ghost-button" type="button" onClick={() => download("control-comparisons.csv", "text/csv", exportCsvControlComparisons(payload))} disabled={!payload.controlComparisons.length}>CSV (controls)</button>
-          <button className="ghost-button" type="button" onClick={() => download("report.json", "application/json", exportJson(payload))}>JSON</button>
-          <button className="ghost-button" type="button" onClick={() => download("report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", exportExcel(payload, { methodsText, resultsText }))}>Excel</button>
-          <button className="ghost-button" type="button" onClick={() => download("report.pdf", "application/pdf", exportPdf(payload))}>PDF</button>
+          <button className="ghost-button" type="button" onClick={() => download("descriptive-stats_report.json", "application/json", exportJson(payload))}>JSON</button>
+          <button className="ghost-button" type="button" onClick={() => download("descriptive-stats_report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", exportExcel(payload, { methodsText, resultsText }))}>Excel</button>
+          <button className="ghost-button" type="button" onClick={() => download("descriptive-stats_report.pdf", "application/pdf", exportPdf(payload))}>PDF</button>
         </div>
       </div>
 

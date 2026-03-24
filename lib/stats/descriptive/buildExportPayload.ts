@@ -5,6 +5,7 @@ export function buildExportPayload(result: DescriptiveResult, opts?: { controlGr
   return {
     timestamp: new Date().toISOString(),
     feature: "Descriptive Stats",
+    filenameBase: "descriptive-stats_report",
     version: opts?.version,
     audit: result.audit,
     mapping: result.audit.mapping,
@@ -20,6 +21,6 @@ export function buildExportPayload(result: DescriptiveResult, opts?: { controlGr
     replicateSummary: result.replicateSummary,
     outliers: result.outliers,
     controlComparisons: result.controlComparisons,
-    plots: opts?.plots ?? { histogram: true, box: true, violin: true, strip: true, qq: true, bioTech: true },
+    plots: opts?.plots ?? { histogram: true, strip: true, qq: true, bioTech: true },
   };
 }

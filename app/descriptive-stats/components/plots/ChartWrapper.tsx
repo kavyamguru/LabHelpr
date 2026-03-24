@@ -59,12 +59,31 @@ export function StripChart({ points }: { points: { x: string; y: number; outlier
 }
 
 export function QQChart({ points }: { points: { x: number; y: number }[] }) {
+  if (!points.length) return <div style={{ fontSize: 13 }}>Not enough data for QQ plot.</div>;
+  const minX = Math.min(...points.map((p) => p.x));
+  const maxX = Math.max(...points.map((p) => p.x));
+  const minY = Math.min(...points.map((p) => p.y));
+  const maxY = Math.max(...points.map((p) => p.y));
+  const diagMin = Math.min(minX, minY);
+  const diagMax = Math.max(maxX, maxY);
   const data = {
     datasets: [
       {
         label: "Data vs Normal",
         data: points.map((p) => ({ x: p.x, y: p.y })),
         backgroundColor: colors[2],
+      },
+      {
+        label: "Reference (y = x)",
+        data: [
+          { x: diagMin, y: diagMin },
+          { x: diagMax, y: diagMax },
+        ],
+        borderColor: "#6b7280",
+        backgroundColor: "#6b7280",
+        showLine: true,
+        pointRadius: 0,
+        borderDash: [4, 4],
       },
     ],
   };
@@ -73,7 +92,7 @@ export function QQChart({ points }: { points: { x: number; y: number }[] }) {
       data={data}
       options={{
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: true, position: "bottom" } },
         scales: { x: { type: "linear", title: { display: true, text: "Theoretical quantiles" } }, y: { title: { display: true, text: "Observed" } } },
       }}
     />

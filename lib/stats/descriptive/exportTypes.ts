@@ -3,6 +3,7 @@ import { DescriptiveResult } from "./types";
 export interface ExportPayload {
   timestamp: string;
   feature: string;
+  filenameBase?: string;
   version?: string;
   audit: DescriptiveResult["audit"];
   mapping: DescriptiveResult["audit"]["mapping"];
@@ -20,8 +21,6 @@ export interface ExportPayload {
   controlComparisons: DescriptiveResult["controlComparisons"];
   plots: {
     histogram: boolean;
-    box: boolean;
-    violin: boolean;
     strip: boolean;
     qq: boolean;
     bioTech: boolean;
