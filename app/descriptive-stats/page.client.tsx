@@ -303,66 +303,49 @@ function DescriptiveStatsClient() {
 
   return (
     <main className="calc-page" style={{ maxWidth: 1180, paddingBottom: 16 }}>
-      <header className="calc-card" style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <div className="badge" style={{ marginBottom: 8 }}>Descriptive statistics · Wet-lab first</div>
-            <h1 style={{ margin: 0 }}>Tell us about your experiment</h1>
-            <p style={{ marginTop: 6, maxWidth: 900, lineHeight: 1.5 }}>
-              Paste or upload your assay data, tell us what you measured and how replicates were done, and we will summarize it for reporting. Biological replicates are the primary unit; technical repeats are never treated as biological n. Descriptive only—no p-values.
-            </p>
-          </div>
-          <div className="pill" style={{ background: "#eef2ff", color: "#4338ca", fontWeight: 700 }}>Biologist-first · Descriptive only</div>
+      <header className="calc-card" style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <h1 style={{ margin: 0 }}>Descriptive statistics</h1>
         </div>
       </header>
 
-      <section className="calc-card" style={{ marginBottom: 16 }}>
-        <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>1) Upload / Import</div>
-        <p style={{ marginTop: 4, color: "#4b5563", fontSize: 13, lineHeight: 1.5 }}>CSV recommended; Excel supported with shape/size limits. Accepted: CSV/TSV/plain text tables; plate-style wide tables; long-form tables.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-          <div>
-            <label className="label" style={{ marginBottom: 6, fontWeight: 700 }}>Paste data (CSV, TSV, comma/tab-separated)</label>
-            <textarea
-              className="input"
-              style={{ width: "100%", minHeight: 160, fontFamily: "monospace" }}
-              value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              placeholder="Paste CSV or tabular data here"
-            />
-            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-              <button className="primary" type="button" onClick={() => handleParseText(rawText, "pasted data", "pasted")}>Parse pasted data</button>
-              <label className="ghost-button" style={{ cursor: "pointer" }}>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.tsv,.txt,.xls,.xlsx,text/csv,text/tab-separated-values,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  style={{ display: "none" }}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFile(f);
-                  }}
-                />
-                Upload CSV / Excel
-              </label>
-              <button className="ghost-button" type="button" onClick={() => { setRawText(ELISA_SAMPLE); handleParseText(ELISA_SAMPLE, "ELISA sample", "pasted"); }}>Load ELISA sample</button>
-              <button className="ghost-button" type="button" onClick={() => { setRawText(PLATE_SAMPLE); handleParseText(PLATE_SAMPLE, "Plate sample", "pasted"); }}>Load plate sample</button>
-            </div>
-            <div style={{ marginTop: 6, color: "#4b5563", fontSize: 12 }}>
-              Example formats: long (group,bio_rep,tech_rep,value,unit), wide plate (Row + A1–H12 numeric), or generic CSV/TSV with headers.
-            </div>
-            {status && <div style={{ marginTop: 6, color: "#166534", fontWeight: 600 }}>{status}</div>}
-            {error && <div style={{ marginTop: 6, color: "#b91c1c", fontWeight: 600 }}>{error}</div>}
+      <section className="calc-card" style={{ marginBottom: 12 }}>
+        <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>Paste or upload</div>
+        <div>
+          <textarea
+            className="input"
+            style={{ width: "100%", minHeight: 160, fontFamily: "monospace" }}
+            value={rawText}
+            onChange={(e) => setRawText(e.target.value)}
+            onPaste={(e) => {
+              const pasted = e.clipboardData.getData("text");
+              if (pasted) {
+                e.preventDefault();
+                setRawText(pasted);
+                handleParseText(pasted, "pasted data", "pasted");
+              }
+            }}
+            placeholder="Paste CSV / TSV / table"
+          />
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+            <button className="primary" type="button" onClick={() => handleParseText(rawText, "pasted data", "pasted")}>Parse</button>
+            <label className="ghost-button" style={{ cursor: "pointer" }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.tsv,.txt,.xls,.xlsx,text/csv,text/tab-separated-values,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFile(f);
+                }}
+              />
+              Upload file
+            </label>
+            <button className="ghost-button" type="button" onClick={() => { setRawText(ELISA_SAMPLE); handleParseText(ELISA_SAMPLE, "Example", "pasted"); }}>Try example</button>
           </div>
-          <div style={infoBox}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>Tips (wet-lab aware)</div>
-            <ul style={{ paddingLeft: 18, margin: 0, lineHeight: 1.5, fontSize: 13 }}>
-              <li>CSV preferred for reliability; Excel supported with shape/size limits.</li>
-              <li>Include biological replicate IDs; technical replicates should nest within them.</li>
-              <li>Mark concentration/dose and timepoint columns if present.</li>
-              <li>Plate data: include a Row header + numeric columns, or well-named columns (A1–H12).</li>
-              <li>Missing values are never dropped silently; we surface counts per column.</li>
-            </ul>
-          </div>
+          {status && <div style={{ marginTop: 6, color: "#166534", fontWeight: 600 }}>{status}</div>}
+          {error && <div style={{ marginTop: 6, color: "#b91c1c", fontWeight: 600 }}>{error}</div>}
         </div>
       </section>
 
