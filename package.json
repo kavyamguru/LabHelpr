@@ -12,8 +12,9 @@
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
     "chart.js": "^4.5.1",
+    "chartjs-chart-box-and-violin-plot": "4.0.0",
     "html-to-image": "^1.11.13",
-    "jspdf": "^4.1.0",
+    "jspdf": "^4.2.1",
     "jstat": "^1.9.6",
     "jszip": "^3.10.1",
     "ml-levenberg-marquardt": "^5.0.0",
