@@ -304,12 +304,12 @@ function DescriptiveStatsClient() {
   return (
     <main className="calc-page" style={{ maxWidth: 1180, paddingBottom: 16 }}>
       <header className="calc-card" style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <div className="badge" style={{ marginBottom: 8 }}>Phase 1 · Ingestion & Mapping</div>
-            <h1 style={{ margin: 0 }}>Descriptive Statistics (Wet-lab, replicate-aware)</h1>
-            <p style={{ marginTop: 6, maxWidth: 900 }}>
-              Upload or paste experimental data, confirm column mapping, and declare replicate structure. This is descriptive-only and prioritizes biological replicates as the reporting unit.
+            <div className="badge" style={{ marginBottom: 8 }}>Descriptive statistics · Wet-lab first</div>
+            <h1 style={{ margin: 0 }}>Tell us about your experiment</h1>
+            <p style={{ marginTop: 6, maxWidth: 900, lineHeight: 1.5 }}>
+              Paste or upload your assay data, tell us what you measured and how replicates were done, and we will summarize it for reporting. Biological replicates are the primary unit; technical repeats are never treated as biological n. Descriptive only—no p-values.
             </p>
           </div>
           <div className="pill" style={{ background: "#eef2ff", color: "#4338ca", fontWeight: 700 }}>Biologist-first · Descriptive only</div>
@@ -460,11 +460,11 @@ function DescriptiveStatsClient() {
         <section className="calc-card" style={{ marginBottom: 16 }}>
           <div className="section-title" style={{ marginBottom: 4, marginTop: 0 }}>3) Data quality & structure</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 10 }}>
-            <Stat label="Rows (raw)" value={`${rowCounts.raw}`} helper="Pre-normalization row count" />
-            <Stat label="Rows (normalized)" value={`${rowCounts.normalized}`} helper="After cleaning: trimming whitespace, parsing numbers" />
-            <Stat label="Rows (analysis)" value={`${rowCounts.analysis}`} helper="After replicate handling (collapse tech if enabled)" />
-            <Stat label="Groups" value={`${groupCounts.groups}`} helper={groupCounts.labels.join(", ") || "-"} />
-            <Stat label="Bio reps" value={`${bioTechCounts.nBio}`} helper={`Tech reps: ${bioTechCounts.nTech}`} />
+            <Stat label="Raw measurements" value={`${rowCounts.raw}`} helper="Rows uploaded" />
+            <Stat label="Valid numeric values" value={`${rowCounts.normalized}`} helper="Usable response rows after parsing" />
+            <Stat label="Biological samples used for analysis" value={`${rowCounts.analysis}`} helper="If tech repeats collapsed, this reflects biological n" />
+            <Stat label="Groups detected" value={`${groupCounts.groups}`} helper={groupCounts.labels.join(", ") || "-"} />
+            <Stat label="Biological replicate IDs" value={`${bioTechCounts.nBio}`} helper={`Technical repeats detected: ${bioTechCounts.nTech}`} />
             <Stat label="Avg tech per bio" value={bioTechCounts.avgTechPerBio ? bioTechCounts.avgTechPerBio.toFixed(2) : "-"} helper="Higher values indicate multiple technicals per bio rep" />
           </div>
           {descriptive?.missingness && <MissingTable missing={descriptive.missingness} />}
@@ -501,28 +501,28 @@ function DescriptiveStatsClient() {
           <div style={{ display: "grid", gap: 16 }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <div style={{ fontWeight: 700 }}>Histogram</div>
+                <div style={{ fontWeight: 700 }}>Distribution of your measurements</div>
                 <PlotExportButton targetRef={histRef} label="Export PNG" filenameBase="histogram" />
               </div>
               <div ref={histRef as any}>{histogramData ? <HistogramPlot data={histogramData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <div style={{ fontWeight: 700 }}>Strip plot</div>
+                <div style={{ fontWeight: 700 }}>Individual values by group</div>
                 <PlotExportButton targetRef={stripRef} label="Export PNG" filenameBase="strip" />
               </div>
               <div ref={stripRef as any}>{stripData ? <StripPlot data={stripData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <div style={{ fontWeight: 700 }}>Q-Q plot</div>
+                <div style={{ fontWeight: 700 }}>Normality check (Q-Q plot)</div>
                 <PlotExportButton targetRef={qqRef} label="Export PNG" filenameBase="qq" />
               </div>
               <div ref={qqRef as any}>{qqData ? <QQPlot data={qqData} /> : <div style={{ fontSize: 13 }}>Not enough data (requires ≥5 observations). </div>}</div>
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <div style={{ fontWeight: 700 }}>Bio/Tech replicate view</div>
+                <div style={{ fontWeight: 700 }}>Biological samples and repeated measurements</div>
                 <PlotExportButton targetRef={bioTechRef} label="Export PNG" filenameBase="biotech" />
               </div>
               <div ref={bioTechRef as any}>{bioTechData ? <BioTechPlot data={bioTechData} collapsed={collapseTechnical} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
@@ -570,8 +570,8 @@ function isMissingCell(val: unknown) {
 }
 
 function SummaryTable({ groups }: { groups: any[] }) {
-  const basicMetrics = ["n", "mean", "median", "sd", "sem", "min", "max", "range", "cvPercent", "ci95"];
-  const advancedMetrics = ["variance", "q1", "q3", "iqr", "skewness", "kurtosis", "geometricMean", "mad", "trimmedMean", "nonMissingCount", "missingCount"];
+  const basicMetrics = ["n", "mean", "median", "sd", "iqr", "min", "max", "cvPercent", "ci95"];
+  const advancedMetrics = ["variance", "range", "q1", "q3", "skewness", "kurtosis", "geometricMean", "mad", "trimmedMean", "nonMissingCount", "missingCount"];
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
   const metrics = showAdvanced ? [...basicMetrics, ...advancedMetrics] : basicMetrics;

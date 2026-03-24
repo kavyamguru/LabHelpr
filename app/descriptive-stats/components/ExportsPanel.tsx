@@ -29,7 +29,10 @@ export function ExportsPanel({ payload }: { payload: ExportPayload }) {
     <div className="panel" style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <div>
-          <div style={{ fontWeight: 700 }}>Exports</div>
+          <div style={{ fontWeight: 700 }}>Export and reporting</div>
+          <div style={{ fontSize: 12, color: "#6b7280" }}>
+            Exports reflect your current settings (replicate mode, control, collapse tech, missingness, warnings, recommendations).
+          </div>
           <div style={{ fontSize: 12, color: "#6b7280" }}>
             Response: {payload.audit.mapping.response ?? "n/a"} · Group: {payload.audit.mapping.group ?? "n/a"} · Replicates: {payload.audit.replicateMode} ({payload.audit.collapseTechnical ? "collapse tech" : "tech visible"}) · Control: {payload.controlGroup ?? "none"}
           </div>

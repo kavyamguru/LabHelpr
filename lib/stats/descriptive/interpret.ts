@@ -124,5 +124,21 @@ export function buildInterpretation(result: DescriptiveResult): InterpretationBl
     blocks.push({ title: "Zero variance", detail: "All values identical; spread metrics collapse." });
   }
 
+  // Reporting style suggestion
+  const cv = result.overall.stats.cvPercent;
+  if (cv !== null) {
+    if (cv > 30) {
+      blocks.push({ title: "Recommended reporting", detail: "Data are quite variable; consider reporting median and IQR, and mention CV%." });
+    } else {
+      blocks.push({ title: "Recommended reporting", detail: "Mean ± SD and median (IQR) are both reasonable; always state biological n." });
+    }
+  }
+  if (!result.metrics.bioRepCount) {
+    blocks.push({ title: "Reporting caution", detail: "No biological replicate IDs detected; report that repeated measurements are not independent biological samples." });
+  }
+  if (result.overall.stats.nonMissingCount < 5) {
+    blocks.push({ title: "Reporting caution", detail: "Very small n; summarize descriptively and avoid strong claims." });
+  }
+
   return blocks;
 }
