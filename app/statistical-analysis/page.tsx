@@ -1,9 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import dynamicImport from "next/dynamic";
-
-const DescriptiveStats = dynamicImport(() => import("../descriptive-stats/page.client"), { ssr: false, loading: () => <div className="calc-card" style={{ padding: 12 }}>Loading descriptive statistics…</div> });
 
 export default function StatisticalAnalysisPage() {
   return (
@@ -20,12 +17,17 @@ export default function StatisticalAnalysisPage() {
       </header>
 
       <section className="calc-card" style={{ marginBottom: 12 }}>
-        <div className="section-title">Descriptive Statistics</div>
-        <p style={{ marginTop: 4, color: "#4b5563", maxWidth: 900 }}>
-          Upload or paste experimental data, map columns, declare replicates, and generate publication-ready descriptive summaries with exports.
-        </p>
-        <div style={{ marginTop: 12 }}>
-          <DescriptiveStats />
+        <div className="section-title">Available tools</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 12, marginTop: 8 }}>
+          <Link href="/descriptive-stats" style={{ textDecoration: "none" }}>
+            <div className="calc-card" style={{ border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, background: "white" }}>
+              <div className="badge" style={{ marginBottom: 6 }}>Descriptive Statistics</div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Replicate-aware summaries</div>
+              <div style={{ color: "#4b5563", lineHeight: 1.5 }}>
+                Upload/paste data, map columns, declare replicates, and export publication-ready descriptive stats with missingness and outlier flags.
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
     </main>
