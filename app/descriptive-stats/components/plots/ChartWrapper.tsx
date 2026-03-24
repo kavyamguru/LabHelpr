@@ -4,6 +4,7 @@ import { BoxPlot, Violin, BoxAndWhiskers, ArrayLinearScale, ArrayLogarithmicScal
 import { Bar, Scatter, Chart as ReactChart } from "react-chartjs-2";
 import { ReactNode } from "react";
 
+// Register only on client to avoid SSR issues
 if (typeof window !== "undefined") {
   ChartJS.register(
     CategoryScale,
