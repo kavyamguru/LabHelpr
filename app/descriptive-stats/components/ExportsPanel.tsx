@@ -24,20 +24,25 @@ function download(name: string, mime: string, data: string | Uint8Array | ArrayB
 export function ExportsPanel({ payload }: { payload: ExportPayload }) {
   const [methodsText, setMethodsText] = useState(buildMethodsText(payload));
   const [resultsText, setResultsText] = useState(buildResultsText(payload));
+  const [showMore, setShowMore] = useState(false);
 
   return (
     <div className="panel" style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
         <div>
-          <div style={{ fontWeight: 700 }}>Export and reporting</div>
+          <div style={{ fontWeight: 700 }}>Report</div>
           <div style={{ fontSize: 12, color: "#6b7280" }}>
-            Exports reflect your current settings (replicate mode, control, collapse tech, missingness, warnings, recommendations).
-          </div>
-          <div style={{ fontSize: 12, color: "#6b7280" }}>
-            Response: {payload.audit.mapping.response ?? "n/a"} · Group: {payload.audit.mapping.group ?? "n/a"} · Replicates: {payload.audit.replicateMode} ({payload.audit.collapseTechnical ? "collapse tech" : "tech visible"}) · Control: {payload.controlGroup ?? "none"}
+            Current settings: response {payload.audit.mapping.response ?? "n/a"}; group {payload.audit.mapping.group ?? "n/a"}; replicate {payload.audit.replicateMode} ({payload.audit.collapseTechnical ? "tech averaged" : "tech shown"}); control {payload.controlGroup ?? "none"}.
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="primary" type="button" onClick={() => download("descriptive-stats_report.pdf", "application/pdf", exportPdf(payload))}>Download report</button>
+          <button className="ghost-button" type="button" onClick={() => setShowMore((v) => !v)}>{showMore ? "Hide more" : "More exports"}</button>
+        </div>
+      </div>
+
+      {showMore && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
           <button className="ghost-button" type="button" onClick={() => download("overall.csv", "text/csv", exportCsvOverall(payload))}>CSV (overall)</button>
           <button className="ghost-button" type="button" onClick={() => download("by-group.csv", "text/csv", exportCsvByGroup(payload))}>CSV (groups)</button>
           <button className="ghost-button" type="button" onClick={() => download("missingness.csv", "text/csv", exportCsvMissing(payload))}>CSV (missing)</button>
@@ -45,9 +50,8 @@ export function ExportsPanel({ payload }: { payload: ExportPayload }) {
           <button className="ghost-button" type="button" onClick={() => download("control-comparisons.csv", "text/csv", exportCsvControlComparisons(payload))} disabled={!payload.controlComparisons.length}>CSV (controls)</button>
           <button className="ghost-button" type="button" onClick={() => download("descriptive-stats_report.json", "application/json", exportJson(payload))}>JSON</button>
           <button className="ghost-button" type="button" onClick={() => download("descriptive-stats_report.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", exportExcel(payload, { methodsText, resultsText }))}>Excel</button>
-          <button className="ghost-button" type="button" onClick={() => download("descriptive-stats_report.pdf", "application/pdf", exportPdf(payload))}>PDF</button>
         </div>
-      </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>

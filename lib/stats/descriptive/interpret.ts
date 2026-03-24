@@ -140,5 +140,23 @@ export function buildInterpretation(result: DescriptiveResult): InterpretationBl
     blocks.push({ title: "Reporting caution", detail: "Very small n; summarize descriptively and avoid strong claims." });
   }
 
+  
+  // Compact “what to report” guidance
+  const reportLines: string[] = [];
+  if (result.overall.stats.nonMissingCount > 1) {
+    reportLines.push('Report biological n.');
+    reportLines.push('Mean ± SD ok if symmetric; median (IQR) if skewed.');
+    if (result.overall.stats.cvPercent !== null && result.overall.stats.cvPercent > 25) {
+      reportLines.push('Variability high; mention CV%.');
+    }
+    if (result.overall.stats.missingCount > 0) {
+      reportLines.push('Mention missing measurements.');
+    }
+  } else {
+    reportLines.push('Only one sample; describe value, avoid spread.');
+  }
+  blocks.push({ title: 'What to report', detail: reportLines.join(' ') });
+
   return blocks;
+
 }
