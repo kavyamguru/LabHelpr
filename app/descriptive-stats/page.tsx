@@ -737,8 +737,6 @@ export default function DescriptiveStatsPhase1() {
 }
 
 function isMissingCell(val: unknown) {
-
-function isMissingCell(val: unknown) {
   if (val === null || val === undefined) return true;
   if (typeof val === "number") return Number.isNaN(val);
   if (typeof val === "string") return val.trim() === "" || ["na", "n/a", "null", "nan", "missing", "none", "-", "--"].includes(val.trim().toLowerCase());
