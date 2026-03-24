@@ -1,27 +1,11 @@
 "use client";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend } from "chart.js";
-import { BoxPlot, Violin, BoxAndWhiskers, ArrayLinearScale, ArrayLogarithmicScale, HorizontalBoxPlot, HorizontalViolin } from "chartjs-chart-box-and-violin-plot";
-import { Bar, Scatter, Chart as ReactChart } from "react-chartjs-2";
+import { Bar, Scatter } from "react-chartjs-2";
 import { ReactNode } from "react";
 
-// Register only on client to avoid SSR issues
+// Register only core Chart.js pieces (no box/violin plugins)
 if (typeof window !== "undefined") {
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    ArrayLinearScale as any,
-    ArrayLogarithmicScale as any,
-    PointElement,
-    LineElement,
-    BarElement,
-    Tooltip,
-    Legend,
-    BoxPlot as any,
-    BoxAndWhiskers as any,
-    Violin as any,
-    HorizontalBoxPlot as any,
-    HorizontalViolin as any
-  );
+  ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend);
 }
 
 export function ChartContainer({ children }: { children: ReactNode }) {
@@ -42,68 +26,13 @@ export function HistogramChart({ labels, series }: { labels: string[]; series: {
   return <Bar data={data} options={{ responsive: true, plugins: { legend: { position: "top" } }, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } } }} />;
 }
 
-export function BoxPlotChart({ labels, quartiles }: { labels: string[]; quartiles: { min: number; q1: number; median: number; q3: number; max: number; outliers: number[] }[] }) {
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "",
-        outlierColor: "#dc2626",
-        padding: 10,
-        itemRadius: 0,
-        borderColor: colors[0],
-        backgroundColor: colors[0] + "44",
-        data: quartiles.map((q) => ({
-          min: q.min,
-          q1: q.q1,
-          median: q.median,
-          q3: q.q3,
-          max: q.max,
-          outliers: q.outliers,
-        })),
-      },
-    ],
-  };
-  return (
-    <Bar
-      data={data}
-      options={{
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: { legend: { display: false } },
-        scales: { x: { }, y: { title: { display: true, text: "Response" } } },
-      }}
-    />
-  );
+// Placeholder: box/violin disabled (plugin removed)
+export function BoxPlotChart({ labels }: { labels: string[] }) {
+  return <div style={{ fontSize: 13 }}>Box plot temporarily disabled (plugin removed).</div>;
 }
 
-export function ViolinPlotChart({ labels, violins }: { labels: string[]; violins: { values: number[] }[] }) {
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "",
-        borderColor: colors[1],
-        backgroundColor: colors[1] + "33",
-        data: violins.map((v) => ({ values: v.values })),
-      },
-    ],
-  };
-  return (
-    <ReactChart
-      type={"violin" as any}
-      data={data}
-      options={{
-        indexAxis: "x",
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: { legend: { display: false } },
-        scales: { x: {}, y: { title: { display: true, text: "Response" } } },
-      }}
-    />
-  );
+export function ViolinPlotChart({ labels }: { labels: string[] }) {
+  return <div style={{ fontSize: 13 }}>Violin plot temporarily disabled (plugin removed).</div>;
 }
 
 export function StripChart({ points }: { points: { x: string; y: number; outlier?: boolean }[] }) {
