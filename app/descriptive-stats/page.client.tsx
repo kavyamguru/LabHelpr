@@ -119,9 +119,7 @@ function DescriptiveStatsClient() {
   });
   const [descriptive, setDescriptive] = useState<DescriptiveResult | null>(null);
   const [controlGroup, setControlGroup] = useState<string | undefined>(undefined);
-  const [warnings, setWarnings] = useState<string[]>([]);
-  const [facetHist, setFacetHist] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const [warnings, setWarnings] = useState<string[]>([]);  const [error, setError] = useState<string>("");
   const [status, setStatus] = useState<string>("Loaded ELISA sample");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -353,7 +351,157 @@ function DescriptiveStatsClient() {
         </div>
       </section>
 
-      {/* ... rest of the original UI unchanged ... */}
+      {normalized && (
+        <section className="calc-card" style={{ marginBottom: 12 }}>
+          <div className="section-title">2) Map columns & replicates</div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+              {mappingOrder.map((m) => (
+                <MappingSelect
+                  key={m.key}
+                  label={m.label}
+                  helper={m.helper}
+                  value={mapping[m.key]}
+                  options={headers}
+                  onChange={(v) => setMapping((prev) => ({ ...prev, [m.key]: v }))}
+                />
+              ))}
+            </div>
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={infoBox}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Replicates</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {([
+                    { key: "nested", label: "Nested (bio > tech)" },
+                    { key: "biological", label: "Biological only" },
+                    { key: "technical", label: "Technical only" },
+                    { key: "none", label: "No replicates" },
+                  ] as { key: ReplicateMode; label: string }[]).map((opt) => (
+                    <label key={opt.key} className="pill" style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", background: replicateMode === opt.key ? "#eef2ff" : "#f8fafc", border: "1px solid #e5e7eb", padding: "6px 10px", borderRadius: 999 }}>
+                      <input type="radio" name="repMode" value={opt.key} checked={replicateMode === opt.key} onChange={() => setReplicateMode(opt.key)} />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                  <input type="checkbox" checked={collapseTechnical} onChange={(e) => setCollapseTechnical(e.target.checked)} />
+                  Collapse technical replicates into biological means
+                </label>
+              </div>
+              <div style={infoBox}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Control group</div>
+                <select className="input" value={controlGroup ?? ""} onChange={(e) => setControlGroup(e.target.value || undefined)}>
+                  <option value="">None</option>
+                  {groupCounts.labels.map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {normalized && (
+        <section className="calc-card" style={{ marginBottom: 12 }}>
+          <div className="section-title">3) Data quality & structure</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 10 }}>
+            <Stat label="Rows (raw)" value={`${rowCounts.raw}`} helper="Pre-normalization" />
+            <Stat label="Rows (normalized)" value={`${rowCounts.normalized}`} helper="After cleaning" />
+            <Stat label="Rows (analysis)" value={`${rowCounts.analysis}`} helper="After replicate handling" />
+            <Stat label="Groups" value={`${groupCounts.groups}`} helper={groupCounts.labels.join(", ") || "-"} />
+            <Stat label="Bio reps" value={`${bioTechCounts.nBio}`} helper={`Tech reps: ${bioTechCounts.nTech}`} />
+            <Stat label="Avg tech per bio" value={bioTechCounts.avgTechPerBio ? bioTechCounts.avgTechPerBio.toFixed(2) : "-"} />
+          </div>
+          {descriptive?.missingness && <MissingTable missing={descriptive.missingness} />}
+        </section>
+      )}
+
+      {descriptive && (
+        <section className="calc-card" style={{ marginBottom: 12 }}>
+          <div className="section-title">4) Summary statistics</div>
+          <p style={{ marginTop: 4, color: "#4b5563", fontSize: 14 }}>Overall plus per-group summaries; replicate-aware.</p>
+          <SummaryTable groups={[descriptive.overall, ...descriptive.byGroup]} />
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Control comparisons</div>
+            {descriptive.controlComparisons?.length ? (
+              <ul style={{ margin: 0, paddingLeft: 16 }}>
+                {descriptive.controlComparisons.map((c, idx) => (
+                  <li key={idx}>{c.group} vs {c.controlGroup}: fold {c.foldChange ?? "-"} (log2 {c.log2FoldChange ?? "-"})</li>
+                ))}
+              </ul>
+            ) : (
+              <div style={{ fontSize: 13 }}>Set a control group to view comparisons.</div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {descriptive && (
+        <section className="calc-card" style={{ marginBottom: 12 }}>
+          <div className="section-title">5) Visualizations</div>
+          <div style={{ display: "grid", gap: 16 }}>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ fontWeight: 700 }}>Histogram</div>
+                <PlotExportButton targetRef={histRef} label="Export PNG" filenameBase="histogram" />
+              </div>
+              <div ref={histRef as any}>{histogramData ? <HistogramPlot data={histogramData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 12 }}>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700 }}>Box plot</div>
+                  <PlotExportButton targetRef={boxRef} label="Export PNG" filenameBase="boxplot" />
+                </div>
+                <div ref={boxRef as any}>{boxData ? <BoxPlot data={boxData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+              </div>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700 }}>Violin plot</div>
+                  <PlotExportButton targetRef={violinRef} label="Export PNG" filenameBase="violin" />
+                </div>
+                <div ref={violinRef as any}>{violinData ? <ViolinPlot data={violinData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+              </div>
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ fontWeight: 700 }}>Strip plot</div>
+                <PlotExportButton targetRef={stripRef} label="Export PNG" filenameBase="strip" />
+              </div>
+              <div ref={stripRef as any}>{stripData ? <StripPlot data={stripData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ fontWeight: 700 }}>Q-Q plot</div>
+                <PlotExportButton targetRef={qqRef} label="Export PNG" filenameBase="qq" />
+              </div>
+              <div ref={qqRef as any}>{qqData ? <QQPlot data={qqData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ fontWeight: 700 }}>Bio/Tech replicate view</div>
+                <PlotExportButton targetRef={bioTechRef} label="Export PNG" filenameBase="biotech" />
+              </div>
+              <div ref={bioTechRef as any}>{bioTechData ? <BioTechPlot data={bioTechData} /> : <div style={{ fontSize: 13 }}>Not enough data.</div>}</div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {descriptive && exportPayload && (
+        <section className="calc-card" style={{ marginBottom: 12 }}>
+          <div className="section-title">6) Interpretation & exports</div>
+          <div style={{ display: "grid", gap: 12 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>Interpretation</div>
+              <InterpretationPanel blocks={descriptive.interpretation || []} />
+            </div>
+            <ExportsPanel payload={exportPayload} />
+            <AnalysisAudit payload={exportPayload} />
+          </div>
+        </section>
+      )}
 
       {warnings.length > 0 && (
         <div className="panel" style={{ border: "1px solid #f87171", borderRadius: 12, padding: 12, background: "#fef2f2" }}>

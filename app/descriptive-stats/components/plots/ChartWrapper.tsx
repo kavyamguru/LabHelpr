@@ -4,7 +4,24 @@ import { BoxPlot, Violin, BoxAndWhiskers, ArrayLinearScale, ArrayLogarithmicScal
 import { Bar, Scatter, Chart as ReactChart } from "react-chartjs-2";
 import { ReactNode } from "react";
 
-ChartJS.register(CategoryScale, LinearScale, ArrayLinearScale as any, ArrayLogarithmicScale as any, PointElement, LineElement, BarElement, Tooltip, Legend, BoxPlot as any, BoxAndWhiskers as any, Violin as any, HorizontalBoxPlot as any, HorizontalViolin as any);
+if (typeof window !== "undefined") {
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    ArrayLinearScale as any,
+    ArrayLogarithmicScale as any,
+    PointElement,
+    LineElement,
+    BarElement,
+    Tooltip,
+    Legend,
+    BoxPlot as any,
+    BoxAndWhiskers as any,
+    Violin as any,
+    HorizontalBoxPlot as any,
+    HorizontalViolin as any
+  );
+}
 
 export function ChartContainer({ children }: { children: ReactNode }) {
   return <div style={{ width: "100%", maxWidth: "100%" }}>{children}</div>;
