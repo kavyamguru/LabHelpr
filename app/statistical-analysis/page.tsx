@@ -661,72 +661,94 @@ export default function StatisticalAnalysisPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0b1525] via-[#0c1b2f] to-[#0b1525] pb-12">
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-50">Statistical Analysis</h1>
-            <p className="text-sm text-slate-300">Minimal, results-first view. Details on click.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-100" onClick={() => setShowDataInput((v) => !v)}>
-              {showDataInput ? "Hide data input" : "Change data"}
-            </button>
-            <button className="rounded-full border border-emerald-600 bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white" onClick={() => setRawInput(defaultTemplate)}>
-              Load sample data
-            </button>
-          </div>
-        </div>
-
-        {showDataInput && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-            <Upload
-              rawInput={rawInput}
-              onRawInputChange={setRawInput}
-              onLoadTemplate={() => setRawInput(defaultTemplate)}
-              label="Paste or upload data"
-              helper="CSV / Excel"
-            />
+        {!showDescriptive && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-emerald-300">Descriptive analysis</div>
+                <p className="text-sm text-slate-300">Open the results-first view.</p>
+              </div>
+              <button className="rounded-full bg-emerald-500 px-3 py-2 text-sm font-semibold text-white" onClick={() => setShowDescriptive(true)}>
+                Open descriptive analysis
+              </button>
+            </div>
           </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-[1.2fr,1fr]">
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-sm">
-              <div className="text-base font-semibold text-slate-50">{summarySentence}</div>
-              <div className="text-sm text-slate-300">{variabilitySentence}</div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {stats.map((g) => (
-                  <div key={g.group} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100">
-                    <div className="font-semibold">{g.group}</div>
-                    <div className="flex gap-3 text-slate-300">
-                      <span>mean {format(g.mean)}</span>
-                      <span>n {g.nBio}</span>
-                    </div>
-                  </div>
-                ))}
+        {showDescriptive && (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-semibold text-slate-50">Statistical Analysis</h1>
+                <p className="text-sm text-slate-300">Minimal, results-first view. Details on click.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-100" onClick={() => setShowDataInput((v) => !v)}>
+                  {showDataInput ? "Hide data input" : "Change data"}
+                </button>
+                <button className="rounded-full border border-emerald-600 bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white" onClick={() => setRawInput(defaultTemplate)}>
+                  Load sample data
+                </button>
+                <button className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-100" onClick={() => setShowDescriptive(false)}>
+                  Close
+                </button>
               </div>
             </div>
-          </div>
-          {defaultPlot}
-        </div>
 
-        <div className="space-y-3">
-          {accordionSections.map((section) => (
-            <div key={section.key} className="rounded-2xl border border-slate-800 bg-slate-900/70">
-              <button
-                className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-slate-100"
-                onClick={() => toggleSection(section.key)}
-              >
-                {section.label}
-                <span className="text-xs text-slate-400">{openSection === section.key ? "Hide" : "Show"}</span>
-              </button>
-              {openSection === section.key && <div className="border-t border-slate-800 p-4">{section.render()}</div>}
+            {showDataInput && (
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <Upload
+                  rawInput={rawInput}
+                  onRawInputChange={setRawInput}
+                  onLoadTemplate={() => setRawInput(defaultTemplate)}
+                  label="Paste or upload data"
+                  helper="CSV / Excel"
+                />
+              </div>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-[1.2fr,1fr]">
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-sm">
+                  <div className="text-base font-semibold text-slate-50">{summarySentence}</div>
+                  <div className="text-sm text-slate-300">{variabilitySentence}</div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {stats.map((g) => (
+                      <div key={g.group} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100">
+                        <div className="font-semibold">{g.group}</div>
+                        <div className="flex gap-3 text-slate-300">
+                          <span>mean {format(g.mean)}</span>
+                          <span>n {g.nBio}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {defaultPlot}
             </div>
-          ))}
-        </div>
+
+            <div className="space-y-3">
+              {accordionSections.map((section) => (
+                <div key={section.key} className="rounded-2xl border border-slate-800 bg-slate-900/70">
+                  <button
+                    className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-slate-100"
+                    onClick={() => toggleSection(section.key)}
+                  >
+                    {section.label}
+                    <span className="text-xs text-slate-400">{openSection === section.key ? "Hide" : "Show"}</span>
+                  </button>
+                  {openSection === section.key && <div className="border-t border-slate-800 p-4">{section.render()}</div>}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </main>
   );
 }
+
 
 type VizProps = { stats: GroupStats[]; format: (n: number | null | undefined, sigOverride?: number) => string; unitsLabel?: string };
 function HistogramPreview({ stats, format, unitsLabel }: VizProps) {
