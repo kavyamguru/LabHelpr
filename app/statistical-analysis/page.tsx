@@ -576,6 +576,7 @@ export default function StatisticalAnalysisPage() {
 
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [showDataInput, setShowDataInput] = useState(false);
+  const [showDescriptive, setShowDescriptive] = useState(false);
 
   const accordionSections = useMemo(
     () => [
