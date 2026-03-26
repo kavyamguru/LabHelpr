@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ELISA_SAMPLE, PLATE_SAMPLE } from "./sampleData";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { ELISA_SAMPLE } from "./sampleData";
 import {
   ColumnGuesses,
   IngestionSourceType,
@@ -104,7 +104,7 @@ function DescriptiveStatsClient() {
   const [rawTable, setRawTable] = useState<ParsedTable | null>(null);
   const [normalized, setNormalized] = useState<ParsedTable | null>(null);
   const [analysisRows, setAnalysisRows] = useState<ParsedTable | null>(null);
-  const [notes, setNotes] = useState<string[]>([]);
+  const [, setNotes] = useState<string[]>([]);
   const [mapping, setMapping] = useState<ColumnGuesses>({});
   const [replicateMode, setReplicateMode] = useState<ReplicateMode>("nested");
   const [collapseTechnical, setCollapseTechnical] = useState<boolean>(true);
@@ -137,15 +137,18 @@ function DescriptiveStatsClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function updateAuditUserMapping(nextMapping: ColumnGuesses) {
-    setAudit((prev) => ({
-      ...prev,
-      userMappings: nextMapping,
-      unitColumn: nextMapping.units,
-      replicateMode,
-      collapseTechnical,
-    }));
-  }
+  const updateAuditUserMapping = useCallback(
+    (nextMapping: ColumnGuesses) => {
+      setAudit((prev) => ({
+        ...prev,
+        userMappings: nextMapping,
+        unitColumn: nextMapping.units,
+        replicateMode,
+        collapseTechnical,
+      }));
+    },
+    [replicateMode, collapseTechnical]
+  );
 
   function handleParseText(text: string, origin: string, source: IngestionSourceType = "pasted") {
     try {
@@ -218,9 +221,9 @@ function DescriptiveStatsClient() {
     }
   }
 
-  const headers = normalized?.headers || rawTable?.headers || [];
-  const preview = useMemo(() => (normalized ? previewRows(normalized.rows) : []), [normalized]);
-  const missingSummary = useMemo(() => (normalized ? summarizeMissing(normalized.rows, headers) : {}), [normalized, headers]);
+  const headers = useMemo(() => normalized?.headers || rawTable?.headers || [], [normalized?.headers, rawTable?.headers]);
+  const _preview = useMemo(() => (normalized ? previewRows(normalized.rows) : []), [normalized]);
+  const _missingSummary = useMemo(() => (normalized ? summarizeMissing(normalized.rows, headers) : {}), [normalized, headers]);
 
   const groupCounts = useMemo(() => {
     if (!normalized || !mapping.group) return { groups: 0, labels: [] as string[] };
@@ -264,7 +267,7 @@ function DescriptiveStatsClient() {
   useEffect(() => {
     if (!mapping) return;
     updateAuditUserMapping(mapping);
-  }, [mapping, replicateMode, collapseTechnical]);
+  }, [mapping, updateAuditUserMapping]);
 
   useEffect(() => {
     if (!normalized) return;
@@ -287,10 +290,10 @@ function DescriptiveStatsClient() {
       console.error(err);
       setError(err instanceof Error ? err.message : "Failed to compute stats");
     }
-  }, [normalized, mapping, replicateMode, collapseTechnical, controlGroup]);
+  }, [normalized, mapping, replicateMode, collapseTechnical, controlGroup, audit.missingTokens, audit.sourceType, audit.inferredStructure, audit.notes]);
 
   const histogramData = useMemo(() => (descriptive ? buildHistogramData(descriptive.analysisRows) : null), [descriptive]);
-  const histogramFacets = useMemo(() => (descriptive ? buildHistogramFacets(descriptive.analysisRows) : {}), [descriptive]);
+  const _histogramFacets = useMemo(() => (descriptive ? buildHistogramFacets(descriptive.analysisRows) : {}), [descriptive]);
   const stripData = useMemo(() => (descriptive ? buildStripData(descriptive.analysisRows) : null), [descriptive]);
   const qqData = useMemo(() => (descriptive ? buildQQData(descriptive.analysisRows) : null), [descriptive]);
   const bioTechData = useMemo(() => (descriptive ? buildBioTechData(descriptive.analysisRows, descriptive.audit.replicateMode, descriptive.audit.collapseTechnical) : null), [descriptive]);
@@ -543,13 +546,6 @@ function DescriptiveStatsClient() {
       )}
     </main>
   );
-}
-
-function isMissingCell(val: unknown) {
-  if (val === null || val === undefined) return true;
-  if (typeof val === "number") return Number.isNaN(val);
-  if (typeof val === "string") return val.trim() === "" || ["na", "n/a", "null", "nan", "missing", "none", "-", "--"].includes(val.trim().toLowerCase());
-  return false;
 }
 
 function SummaryTable({ groups }: { groups: any[] }) {

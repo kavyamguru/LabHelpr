@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #edf4fb;
-  --foreground: #0f1f33;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-border: #e2e8f0;
+  --muted: #475569;
+  --accent-blue: #3b82f6;
+  --accent-green: #22c55e;
+  --accent-amber: #f59e0b;
 }
 
 @theme inline {
@@ -17,12 +23,7 @@ body {
   font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(180deg, #f8fbf8 0%, #edf5ef 100%);
-}
-
-body::before,
-body::after {
-  content: none;
+  background: var(--background);
 }
 
 .calc-page {
@@ -36,26 +37,26 @@ body::after {
 .calc-page h1 {
   font-size: 2rem;
   margin-bottom: 10px;
-  color: #0b2745;
+  color: #0f172a;
   letter-spacing: -0.03em;
   font-weight: 800;
 }
 
 .calc-page p {
   line-height: 1.58;
-  color: #344b60;
+  color: var(--muted);
 }
 
 .calc-page input,
 .calc-page select,
 .calc-page button,
 .calc-page textarea {
-  border: 1px solid rgba(173, 196, 224, 0.9);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.8);
-  color: #12263a;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--card);
+  color: var(--foreground);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .calc-page input,
@@ -69,313 +70,203 @@ body::after {
   padding: 9px 16px;
   font-weight: 700;
   cursor: pointer;
-  background: linear-gradient(135deg, #ffffff 0%, #eaf3fd 100%);
-  box-shadow: 0 8px 18px rgba(23, 64, 115, 0.12);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
   transition: all 0.18s ease;
 }
 
 .calc-page button:hover {
-  border-color: #7da6da;
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(23, 64, 115, 0.18);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
 }
 
 .calc-page table {
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(188, 210, 235, 0.95);
+  background: var(--card);
+  border: 1px solid var(--card-border);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 14px 30px rgba(21, 56, 99, 0.11);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
 }
 
 .calc-page th {
-  background: linear-gradient(90deg, #e8f1fc 0%, #e4f4fb 100%);
-  color: #123a63;
+  background: #eef2f7;
+  color: #0f172a;
 }
 
 .calc-card {
-  background: #ffffff;
-  border: 1px solid #d5e4f2;
-  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
   padding: 16px;
-  box-shadow: 0 8px 20px rgba(15, 39, 66, 0.08);
-  color: #12263a;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  color: var(--foreground);
   transition: transform 0.16s ease, box-shadow 0.2s ease;
 }
 
 .calc-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(15, 39, 66, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
 }
 
 .btn-primary {
   display: inline-block;
-  border: 1px solid #166534;
+  border: 1px solid #2563eb;
   border-radius: 10px;
   padding: 10px 14px;
   font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #166534 0%, #15803d 100%);
-  box-shadow: 0 8px 18px rgba(21, 128, 61, 0.26);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26);
 }
 
-.btn-primary:hover {
-  filter: brightness(1.03);
-}
+.btn-primary:hover { filter: brightness(1.03); }
 
 .brand-mark-wrap {
   width: 64px;
   height: 64px;
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid #cfd8d3;
-  background: #f4f8f5;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
   flex-shrink: 0;
 }
 
-.brand-mark {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  transform: none;
-  filter: saturate(0.72) contrast(0.94) brightness(1.02);
-}
+.brand-mark { width: 100%; height: 100%; object-fit: contain; object-position: center; }
 
-.calc-launch {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  color: #14532d;
-}
+.calc-launch { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; color: #0f172a; }
 
-.calc-launch-box {
-  width: 132px;
-  height: 132px;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  animation: calc-float 2.4s ease-in-out infinite;
-}
+.calc-launch-box { width: 132px; height: 132px; border-radius: 18px; display: grid; place-items: center; border: none; background: transparent; box-shadow: none; animation: calc-float 2.4s ease-in-out infinite; }
 
-.calc-launch-icon {
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  border-radius: 16px;
-  filter: none;
-}
+.calc-launch-icon { width: 100%; height: 100%; object-fit: fill; border-radius: 16px; }
 
-.calc-launch-text {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
+.calc-launch-text { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
 
-@keyframes calc-float {
-  0%,
-  100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
+@keyframes calc-float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-4px);} }
 
-.calc-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 14px;
-}
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
 
 .badge {
   display: inline-block;
   font-size: 12px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #dbeafe 0%, #d1fae5 50%, #e0f2fe 100%);
-  color: #1e3a8a;
-  border: 1px solid rgba(147, 197, 253, 0.85);
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.4);
   font-weight: 800;
 }
 
-.theme-toggle {
-  position: fixed;
-  top: 14px;
-  right: 16px;
-  z-index: 20;
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 12px;
-  border: 1px solid rgba(173, 196, 224, 0.9);
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+.panel {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
-.theme-toggle button {
-  border: 1px solid transparent;
-  border-radius: 9px;
-  padding: 6px 10px;
-  font-size: 12px;
+.section-title {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--foreground);
+  margin-bottom: 10px;
+}
+
+.label {
   font-weight: 700;
-  color: #1e3a8a;
+  color: var(--foreground);
+  font-size: 14px;
+}
+
+.helper {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.radio-group { display: grid; gap: 6px; }
+.radio { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+
+.checkbox { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.ghost-button {
+  border: 1px solid var(--card-border);
   background: transparent;
+  color: var(--foreground);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 600;
+  transition: all 0.15s ease;
 }
 
-.theme-toggle button[data-active="true"] {
-  background: linear-gradient(135deg, #ffffff 0%, #eaf3fd 100%);
-  border-color: #bfd5ef;
+.ghost-button:hover { border-color: #3b82f6; color: #1d4ed8; }
+
+/* Dark mode */
+.dark {
+  --background: #0f172a;
+  --foreground: #e5e7eb;
+  --card: #1a2235;
+  --card-border: #26334a;
+  --muted: #94a3b8;
 }
 
-.dark body {
-  color: #e5e7eb;
-  background:
-    radial-gradient(1200px 520px at 8% -10%, rgba(34, 197, 94, 0.12), transparent 62%),
-    radial-gradient(900px 460px at 100% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
-    linear-gradient(180deg, #0f1110 0%, #141614 100%);
-}
+.dark body { background: var(--background); color: var(--foreground); }
 
-.dark body::before,
-.dark body::after {
-  content: none;
-}
-
-.dark .calc-page h1 { color: #f3f4f6; }
-.dark .calc-page p { color: #d1d5db; }
+.dark .calc-page h1 { color: #e5e7eb; }
+.dark .calc-page p { color: var(--muted); }
 
 .dark .calc-page input,
 .dark .calc-page select,
 .dark .calc-page button,
 .dark .calc-page textarea {
-  border: 1px solid #3f3f46;
-  background: #1f1f1f;
-  color: #f3f4f6;
-}
-
-.dark .calc-page button {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.34);
-}
-
-.dark .btn-primary {
-  border-color: #4ade80;
-  background: linear-gradient(135deg, #1b4332 0%, #166534 100%);
-  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.3);
-}
-
-.dark .calc-launch {
-  color: #86efac;
-}
-
-.dark .calc-launch-box {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
-
-.dark .calc-launch-icon {
-  filter: none;
-}
-
-.dark .calc-page table {
-  background: #1a1a1a;
-  border: 1px solid #3f3f46;
-}
-
-.dark .calc-page th {
-  background: #262626;
-  color: #f3f4f6;
-}
-
-.dark .calc-card {
-  background: #18181b;
-  border: 1px solid #3f3f46;
-  color: #f3f4f6;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
-}
-
-.dark .brand-mark-wrap {
-  border-color: #52525b;
-  background: #121212;
-}
-
-.dark .brand-mark {
-  filter: saturate(0.55) brightness(1.12) contrast(0.92);
-}
-
-.dark .badge {
-  background: linear-gradient(90deg, #123c66 0%, #0f4b63 50%, #114267 100%);
-  color: #bfe7ff;
-  border-color: rgba(79, 140, 191, 0.9);
-}
-
-.dark .theme-toggle {
-  border-color: #3f3f46;
-  background: #1a1a1a;
-}
-
-.dark .theme-toggle button {
+  border: 1px solid var(--card-border);
+  background: #111827;
   color: #e5e7eb;
 }
 
-.dark .theme-toggle button[data-active="true"] {
-  background: #27272a;
-  border-color: #52525b;
+.dark .calc-page button {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
 }
 
+.dark .calc-page table { background: #111827; border: 1px solid var(--card-border); }
+.dark .calc-page th { background: #1f2937; color: #e5e7eb; }
+
+.dark .calc-card {
+  background: #111827;
+  border: 1px solid var(--card-border);
+  color: #e5e7eb;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+.dark .panel { background: #111827; border: 1px solid var(--card-border); box-shadow: 0 10px 24px rgba(0,0,0,0.28); }
+.dark .pill { background: rgba(59,130,246,0.16); color: #bfdbfe; border-color: rgba(59,130,246,0.45); }
+.dark .ghost-button { border-color: #334155; color: #e5e7eb; }
+.dark .ghost-button:hover { border-color: #3b82f6; color: #bfdbfe; }
+
+.dark .brand-mark-wrap { border-color: #334155; background: #0f172a; }
+.dark .badge { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; border-color: rgba(59, 130, 246, 0.5); }
+
 @media (max-width: 768px) {
-  .calc-page {
-    padding: 18px 14px 30px;
-  }
-
-  .calc-page h1 {
-    font-size: 1.5rem;
-    line-height: 1.2;
-  }
-
-  .calc-page p {
-    font-size: 14px;
-  }
-
-  .calc-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .calc-card {
-    border-radius: 14px;
-    padding: 12px;
-  }
-
-  .calc-page label[style*="width"] {
-    width: 100% !important;
-    margin-bottom: 4px;
-  }
-
+  .calc-page { padding: 18px 14px 30px; }
+  .calc-page h1 { font-size: 1.5rem; line-height: 1.2; }
+  .calc-page p { font-size: 14px; }
+  .calc-grid { grid-template-columns: 1fr; gap: 10px; }
+  .calc-card { border-radius: 14px; padding: 12px; }
   .calc-page input[style*="width"],
   .calc-page select[style*="width"],
-  .calc-page textarea[style*="width"] {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .calc-page table {
-    font-size: 13px;
-  }
-
-  .theme-toggle {
-    top: auto;
-    right: auto;
-    left: 50%;
-    bottom: 10px;
-    transform: translateX(-50%);
-    padding: 5px;
-  }
-
-  .theme-toggle button {
-    padding: 6px 9px;
-    font-size: 11px;
-  }
+  .calc-page textarea[style*="width"] { width: 100% !important; max-width: 100% !important; }
+  .calc-page table { font-size: 13px; }
 }

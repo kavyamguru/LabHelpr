@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type Mode = "light" | "dark" | "system";
 
 function applyMode(mode: Mode) {
+  if (typeof window === "undefined") return;
   const root = document.documentElement;
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const isDark = mode === "dark" || (mode === "system" && prefersDark);
@@ -36,10 +37,16 @@ export default function ThemeToggle() {
   }
 
   return (
-    <div className="theme-toggle" role="group" aria-label="Theme switcher">
-      <button type="button" onClick={() => update("light")} data-active={mode === "light"}>Light</button>
-      <button type="button" onClick={() => update("dark")} data-active={mode === "dark"}>Dark</button>
-      <button type="button" onClick={() => update("system")} data-active={mode === "system"}>System</button>
-    </div>
+    <button
+      type="button"
+      onClick={() => update(mode === "dark" ? "light" : "dark")}
+      className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-100 shadow-sm hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+      aria-label="Toggle theme"
+    >
+      <span className="text-lg" aria-hidden>
+        {mode === "dark" ? "☀️" : "🌙"}
+      </span>
+      <span className="hidden sm:inline">{mode === "dark" ? "Light" : "Dark"} mode</span>
+    </button>
   );
 }

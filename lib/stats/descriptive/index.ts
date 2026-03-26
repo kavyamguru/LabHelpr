@@ -37,7 +37,7 @@ export function computeDescriptiveStats(
   const outliers = flagOutliers(analysisRows);
 
   // attach outliers to group summaries
-  const outliersByGroup = outliers.reduce<Record<string, number>>((acc, o) => {
+  const _outliersByGroup = outliers.reduce<Record<string, number>>((acc, o) => {
     const key = o.group ?? "(unlabeled)";
     acc[key] = (acc[key] || 0) + 1;
     return acc;

@@ -22,7 +22,7 @@ export function flagOutliers(rows: AnalysisRow[]): OutlierFlag[] {
   });
 
   const flags: OutlierFlag[] = [];
-  byGroup.forEach((groupRows, groupKey) => {
+  byGroup.forEach((groupRows, _groupKey) => {
     const values = groupRows.map((r) => r.response as number).sort((a, b) => a - b);
     if (values.length < 4) return; // too small to flag reliably
     const q1 = quantile(values, 0.25)!;

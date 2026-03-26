@@ -1,4 +1,4 @@
-import { AnalysisRow, GroupSummary, ReplicateMode } from "./types";
+import { AnalysisRow, ReplicateMode } from "./types";
 
 export interface ChartSeries {
   label: string;
@@ -74,15 +74,15 @@ export function buildHistogramData(rows: AnalysisRow[], binCount = 10): Histogra
 
 export function buildHistogramFacets(rows: AnalysisRow[], binCount = 10): Record<string, HistogramData> {
   const points = nonNullResponses(rows);
-  const byGroup: Record<string, AnalysisRow[]> = {};
+  const byGroup: Record<string, { response: number }[]> = {};
   points.forEach((p) => {
     const key = p.group;
-    if (!byGroup[key]) byGroup[key] = [] as any;
-    (byGroup[key] as any).push({ response: p.value });
+    if (!byGroup[key]) byGroup[key] = [];
+    byGroup[key].push({ response: p.value });
   });
   const facets: Record<string, HistogramData> = {};
   Object.entries(byGroup).forEach(([group, arr]) => {
-    const values = arr.map((r: any) => r.response as number);
+    const values = arr.map((r) => r.response as number);
     if (!values.length) return;
     const min = Math.min(...values);
     const max = Math.max(...values);

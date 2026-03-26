@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import ThemeToggle from "./components/ThemeToggle";
+import { AppHeader } from "./components/AppHeader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   title: "LH Calculator",
   description: "Bench-friendly calculators for lab workflows.",
   icons: {
-    icon: "/labhelpr-logo.png",
-    shortcut: "/labhelpr-logo.png",
-    apple: "/labhelpr-logo.png",
+    icon: "/logo-labhelpr.png",
+    shortcut: "/logo-labhelpr.png",
+    apple: "/logo-labhelpr.png",
   },
 };
 
@@ -31,16 +31,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var m=localStorage.getItem('labhelpr-theme')||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var dark=(m==='dark')||(m==='system'&&d);document.documentElement.classList.toggle('dark',dark);}catch(e){}})();`,
           }}
         />
-        <ThemeToggle />
-        {children}
+        <AppHeader />
+        <div className="pt-16">{children}</div>
         <Analytics />
       </body>
     </html>

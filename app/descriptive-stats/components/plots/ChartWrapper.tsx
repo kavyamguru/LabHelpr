@@ -27,11 +27,11 @@ export function HistogramChart({ labels, series }: { labels: string[]; series: {
 }
 
 // Placeholder: box/violin disabled (plugin removed)
-export function BoxPlotChart({ labels }: { labels: string[] }) {
+export function BoxPlotChart({ labels: _labels }: { labels: string[] }) {
   return <div style={{ fontSize: 13 }}>Box plot temporarily disabled (plugin removed).</div>;
 }
 
-export function ViolinPlotChart({ labels }: { labels: string[] }) {
+export function ViolinPlotChart({ labels: _labels }: { labels: string[] }) {
   return <div style={{ fontSize: 13 }}>Violin plot temporarily disabled (plugin removed).</div>;
 }
 
