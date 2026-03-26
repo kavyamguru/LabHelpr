@@ -551,8 +551,53 @@ export default function StatisticalAnalysisPage() {
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100 pb-12 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+    <main className="min-h-screen bg-gradient-to-b from-[#0b1525] via-[#0c1b2f] to-[#0b1525] pb-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+        <section className="rounded-3xl border border-slate-800 bg-[rgba(15,25,40,0.9)] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur">
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/60 px-3 py-1 text-xs font-semibold text-slate-200">
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" /> Statistical Analysis
+            </div>
+            <h1 className="text-3xl font-bold text-slate-50">Statistical Analysis</h1>
+            <p className="max-w-2xl text-sm text-slate-300">
+              Upload your experimental data for instant statistical analysis and publication-ready visualizations.
+            </p>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 p-6 shadow-inner">
+            <div className="flex flex-col items-center gap-3 text-slate-200">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/50">
+                <span className="text-2xl" aria-hidden>
+                  ⬆️
+                </span>
+              </div>
+              <div className="text-lg font-semibold">Drop your data file here</div>
+              <div className="text-sm text-slate-400">CSV or Excel · Group, Value, Replicate columns</div>
+              <div className="flex flex-wrap gap-3 mt-2">
+                <label className="cursor-pointer rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600">
+                  Choose File
+                  <input type="file" className="hidden" />
+                </label>
+                <button className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
+                  Paste Data
+                </button>
+                <button className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
+                  Load Sample Data
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {[{ title: "Instant Statistics", desc: "Mean, SD, SEM, CV% calculated automatically" }, { title: "Publication Plots", desc: "SuperPlot-style visualizations with individual points" }, { title: "Quality Checks", desc: "Normality hints and distribution review" }].map((item) => (
+              <div key={item.title} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-left shadow-sm">
+                <div className="text-sm font-semibold text-slate-100">{item.title}</div>
+                <div className="mt-1 text-xs text-slate-400">{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <Card
           title="Basic Descriptive Statistics (LabHelpr)"
           description="Publication-grade descriptive stats with mandatory clarity for biological vs technical replicates."
