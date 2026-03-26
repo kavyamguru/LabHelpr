@@ -30,7 +30,6 @@ import {
   VarianceConvention,
 } from "../../lib/stats/descriptive";
 import { formatNumber as fmt, defaultFormat } from "../../lib/stats/formatting";
-import { Card } from "../components/Card";
 import { Upload } from "../components/Upload";
 import { DataPreview } from "../components/DataPreview";
 import { StatSummary } from "../components/StatSummary";
@@ -163,17 +162,17 @@ function useFileReader(onText: (text: string) => void) {
 
 export default function StatisticalAnalysisPage() {
   const [rawInput, setRawInput] = useState(defaultTemplate);
-  const [missingHandling, setMissingHandling] = useState<MissingHandling>("ignore");
-  const [replicateType, setReplicateType] = useState<ReplicateType>("biological");
-  const [technicalHandling, setTechnicalHandling] = useState<TechnicalHandling>("average");
-  const [transform, setTransform] = useState<Transform>("none");
-  const [allowNonPositiveLog, setAllowNonPositiveLog] = useState(false);
-  const [referenceGroup, setReferenceGroup] = useState<string>("Control");
-  const [units, setUnits] = useState<string>("unitless");
+  const [missingHandling, _setMissingHandling] = useState<MissingHandling>("ignore");
+  const [replicateType, _setReplicateType] = useState<ReplicateType>("biological");
+  const [technicalHandling, _setTechnicalHandling] = useState<TechnicalHandling>("average");
+  const [transform, _setTransform] = useState<Transform>("none");
+  const [allowNonPositiveLog, _setAllowNonPositiveLog] = useState(false);
+  const [referenceGroup, _setReferenceGroup] = useState<string>("Control");
+  const [units, _setUnits] = useState<string>("unitless");
   const [showModes, setShowModes] = useState(false);
-  const [varianceConvention, setVarianceConvention] = useState<VarianceConvention>("sample");
-  const [iqrMultiplier, setIqrMultiplier] = useState<number>(1.5);
-  const [formatOptions, setFormatOptions] = useState(defaultFormat);
+  const [varianceConvention, _setVarianceConvention] = useState<VarianceConvention>("sample");
+  const [iqrMultiplier, _setIqrMultiplier] = useState<number>(1.5);
+  const [formatOptions, _setFormatOptions] = useState(defaultFormat);
   const [showQq, setShowQq] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [buildingReport, setBuildingReport] = useState(false);
@@ -182,7 +181,7 @@ export default function StatisticalAnalysisPage() {
   const boxRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
-  const exportFigure = async (ref: { current: HTMLDivElement | null }, filename: string, format: "png" | "svg") => {
+  const exportFigure = useCallback(async (ref: { current: HTMLDivElement | null }, filename: string, format: "png" | "svg") => {
     if (!ref.current) return;
     if (!units.trim()) {
       alert("Please set units (or 'unitless') before exporting figures.");
@@ -205,7 +204,7 @@ export default function StatisticalAnalysisPage() {
     } catch (err) {
       console.error("Export failed", err);
     }
-  };
+    }, [units]);
 
   useFileReader((text) => setRawInput(text));
 
@@ -242,7 +241,7 @@ export default function StatisticalAnalysisPage() {
   const nBioTotal = bioKeys.size;
   const nTechTotal = useMemo(() => usable.filter((r) => r.techRep !== undefined).length, [usable]);
   const avgTechPerBio = nBioTotal > 0 ? nTechTotal / nBioTotal : 0;
-  const techMissingBio = useMemo(
+  const _techMissingBio = useMemo(
     () =>
       replicateType === "technical" &&
       usable.some((u) => u.techRep && !u.bioRep),
@@ -252,7 +251,7 @@ export default function StatisticalAnalysisPage() {
     const set = new Set(usable.map((u) => (u.unit || "").trim()).filter(Boolean));
     return set;
   }, [usable]);
-  const mixedUnits = unitsFromData.size > 1;
+  const _mixedUnits = unitsFromData.size > 1;
 
   const methodsSnippet = useMemo(() => {
     const parts = [
@@ -514,9 +513,9 @@ export default function StatisticalAnalysisPage() {
     }
   }, [units, stats, rawInput, usable, removed, warnings, methodsSnippet, resultsSnippet, manifestBase, computeOpts, histogramRef, boxRef, errorRef, missingHandling, replicateType, technicalHandling, transform, allowNonPositiveLog, varianceConvention, iqrMultiplier]);
 
-  const inputClass = "w-full rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-800 shadow-inner focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:focus:ring-blue-500/50";
-  const labelClass = "text-sm font-semibold text-slate-800 dark:text-slate-100";
-  const helperClass = "text-xs text-slate-500 dark:text-slate-400";
+  const _inputClass = "w-full rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-800 shadow-inner focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:focus:ring-blue-500/50";
+  const _labelClass = "text-sm font-semibold text-slate-800 dark:text-slate-100";
+  const _helperClass = "text-xs text-slate-500 dark:text-slate-400";
 
   const vizItems = useMemo(
     () => [
@@ -550,481 +549,180 @@ export default function StatisticalAnalysisPage() {
     [boxRef, errorRef, format, histogramRef, stats, units]
   );
 
+  const summarySentence = useMemo(() => {
+    if (foldChanges.length > 0) {
+      const fc = foldChanges[0];
+      const direction = fc.percentChange && fc.percentChange > 0 ? "higher" : "lower";
+      const pct = fc.percentChange ? Math.abs(fc.percentChange) : null;
+      return `${fc.group} is ${direction} than ${safeReferenceGroup}${pct !== null ? ` (+${format(pct, 2)}%)` : ""}`;
+    }
+    if (stats.length >= 2) {
+      const ref = stats[0];
+      const other = stats[1];
+      const pct = ref.mean ? ((other.mean - ref.mean) / ref.mean) * 100 : 0;
+      const direction = pct > 0 ? "higher" : "lower";
+      return `${other.group} is ${direction} than ${ref.group} (+${format(Math.abs(pct), 2)}%)`;
+    }
+    return "Results ready";
+  }, [foldChanges, safeReferenceGroup, stats, format]);
+
+  const variabilitySentence = useMemo(() => {
+    const cvs = stats.map((g) => g.cv).filter((v) => Number.isFinite(v));
+    if (!cvs.length) return "Variability: n/a";
+    const avg = cvs.reduce((a, b) => a + b, 0) / cvs.length;
+    const label = avg < 15 ? "low" : avg < 30 ? "moderate" : "high";
+    return `Variability: ${label} (CV ${format(avg, 2)}%)`;
+  }, [stats, format]);
+
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [showDataInput, setShowDataInput] = useState(false);
+
+  const accordionSections = useMemo(
+    () => [
+      {
+        key: "stats",
+        label: "View detailed statistics",
+        render: () => (
+          <StatSummary stats={stats} showModes={showModes} onToggleModes={(checked) => setShowModes(checked)} format={format} varianceConvention={varianceConvention} />
+        ),
+      },
+      {
+        key: "quality",
+        label: "View data quality",
+        render: () => (
+          <div className="space-y-3">
+            <DataPreview usable={usable} removed={removed} />
+            <div className="grid grid-cols-2 gap-3 text-sm text-slate-200 sm:grid-cols-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">n_bio: {nBioTotal}</div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">tech rows: {nTechTotal}</div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">avg tech/bio: {format(avgTechPerBio, 2)}</div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">units: {units.trim() || "unitless"}</div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "plots",
+        label: "View plots",
+        render: () => (
+          <Visualizations items={vizItems} showQq={showQq} onToggleQq={(checked) => setShowQq(checked)} onExportFigure={exportFigure} helper="Toggle to see additional plots." />
+        ),
+      },
+      {
+        key: "methods",
+        label: "View methods & reporting",
+        render: () => (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+              <div className="text-sm font-semibold text-slate-100">Methods</div>
+              <p className="text-sm text-slate-300">{methodsSnippet}</p>
+              <div className="mt-2 flex gap-2">
+                <button className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-900" onClick={() => navigator.clipboard.writeText(methodsSnippet)}>
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+              <div className="text-sm font-semibold text-slate-100">Results</div>
+              <p className="text-sm text-slate-300">{resultsSnippet}</p>
+              <div className="mt-2 flex gap-2">
+                <button className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-900" onClick={() => navigator.clipboard.writeText(resultsSnippet)}>
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "export",
+        label: "Export results",
+        render: () => (
+          <ExportPanel onReviewerReport={handleReviewerReport} onBundleExport={handleBundleExport} buildingReport={buildingReport} exporting={exporting} units={units} />
+        ),
+      },
+    ],
+    [avgTechPerBio, buildingReport, exporting, handleBundleExport, handleReviewerReport, methodsSnippet, resultsSnippet, showModes, format, nBioTotal, nTechTotal, stats, units, showQq, vizItems, exportFigure, usable, removed, varianceConvention]
+  );
+
+  const toggleSection = (key: string) => {
+    setOpenSection((prev) => (prev === key ? null : key));
+  };
+
+  const defaultPlot = (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-inner">
+      <div className="mb-3 text-sm font-semibold text-slate-200">Distribution</div>
+      <div ref={boxRef as React.RefObject<HTMLDivElement>}>
+        <BoxWhisker stats={stats} format={format} />
+      </div>
+    </div>
+  );
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0b1525] via-[#0c1b2f] to-[#0b1525] pb-12">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-3xl border border-slate-800 bg-[rgba(15,25,40,0.9)] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur">
-          <div className="flex flex-col items-center text-center gap-2">
-            <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/60 px-3 py-1 text-xs font-semibold text-slate-200">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" /> Statistical Analysis
-            </div>
-            <h1 className="text-3xl font-bold text-slate-50">Statistical Analysis</h1>
-            <p className="max-w-2xl text-sm text-slate-300">
-              Upload your experimental data for instant statistical analysis and publication-ready visualizations.
-            </p>
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-50">Statistical Analysis</h1>
+            <p className="text-sm text-slate-300">Minimal, results-first view. Details on click.</p>
           </div>
-
-          <div className="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 p-6 shadow-inner">
-            <div className="flex flex-col items-center gap-3 text-slate-200">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/50">
-                <span className="text-2xl" aria-hidden>
-                  ⬆️
-                </span>
-              </div>
-              <div className="text-lg font-semibold">Drop your data file here</div>
-              <div className="text-sm text-slate-400">CSV or Excel · Group, Value, Replicate columns</div>
-              <div className="flex flex-wrap gap-3 mt-2">
-                <label className="cursor-pointer rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600">
-                  Choose File
-                  <input type="file" className="hidden" />
-                </label>
-                <button className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
-                  Paste Data
-                </button>
-                <button className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500">
-                  Load Sample Data
-                </button>
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-100" onClick={() => setShowDataInput((v) => !v)}>
+              {showDataInput ? "Hide data input" : "Change data"}
+            </button>
+            <button className="rounded-full border border-emerald-600 bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white" onClick={() => setRawInput(defaultTemplate)}>
+              Load sample data
+            </button>
           </div>
+        </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {[{ title: "Instant Statistics", desc: "Mean, SD, SEM, CV% calculated automatically" }, { title: "Publication Plots", desc: "SuperPlot-style visualizations with individual points" }, { title: "Quality Checks", desc: "Normality hints and distribution review" }].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-left shadow-sm">
-                <div className="text-sm font-semibold text-slate-100">{item.title}</div>
-                <div className="mt-1 text-xs text-slate-400">{item.desc}</div>
-              </div>
-            ))}
+        {showDataInput && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+            <Upload
+              rawInput={rawInput}
+              onRawInputChange={setRawInput}
+              onLoadTemplate={() => setRawInput(defaultTemplate)}
+              label="Paste or upload data"
+              helper="CSV / Excel"
+            />
           </div>
-        </section>
+        )}
 
-        <Card
-          title="Basic Descriptive Statistics (LabHelpr)"
-          description="Publication-grade descriptive stats with mandatory clarity for biological vs technical replicates."
-          badge={<span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200">Descriptive only · No hypothesis testing</span>}
-        />
-
-        <Card
-          title="1) Data ingestion & replicate declaration"
-          description="Paste or upload data, declare replicates, and set formatting preferences."
-        >
-          <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-            <div>
-              <Upload
-                rawInput={rawInput}
-                onRawInputChange={setRawInput}
-                onLoadTemplate={() => setRawInput(defaultTemplate)}
-                label="Paste data (CSV or tab-separated)"
-                helper="Expected columns: group (optional, default “Ungrouped”), bio_rep (required for technical replicates), tech_rep (optional), value (numeric), unit (optional)."
-              />
-            </div>
-
-            <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-700/70 dark:bg-slate-900/60">
-              <div>
-                <div className={labelClass}>Replicate declaration (mandatory)</div>
-                <div className="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-200">
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="radio"
-                      name="rep-type"
-                      className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      checked={replicateType === "biological"}
-                      onChange={() => setReplicateType("biological")}
-                    />
-                    <span>Biological replicates (n counts these) — Default</span>
-                  </label>
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="radio"
-                      name="rep-type"
-                      className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      checked={replicateType === "technical"}
-                      onChange={() => setReplicateType("technical")}
-                    />
-                    <span>Technical replicates provided (n still counts biological replicates)</span>
-                  </label>
-                </div>
-              </div>
-
-              {replicateType === "technical" && (
-                <div className="space-y-2">
-                  <div className={labelClass}>Technical replicate handling</div>
-                  <div className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-                    <label className="flex items-start gap-2">
-                      <input
-                        type="radio"
-                        name="tech-handling"
-                        className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        checked={technicalHandling === "average"}
-                        onChange={() => setTechnicalHandling("average")}
-                      />
-                      <span>Average technical replicates within each biological replicate (recommended)</span>
-                    </label>
-                    <label className="flex items-start gap-2">
-                      <input
-                        type="radio"
-                        name="tech-handling"
-                        className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        checked={technicalHandling === "separate"}
-                        onChange={() => setTechnicalHandling("separate")}
-                      />
-                      <span>Report technical replicates separately (n still = biological replicates)</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <div className={labelClass}>Missing data handling</div>
-                <select
-                  className={inputClass}
-                  value={missingHandling}
-                  onChange={(e) => setMissingHandling(e.target.value as MissingHandling)}
-                >
-                  <option value="ignore">Ignore rows with missing values (default)</option>
-                  <option value="drop-replicate">Exclude entire biological replicate if any value is missing</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <div className={labelClass}>Transformations (explicit opt-in)</div>
-                <select
-                  className={inputClass}
-                  value={transform}
-                  onChange={(e) => setTransform(e.target.value as Transform)}
-                >
-                  <option value="none">No transformation (default)</option>
-                  <option value="log2">Log₂ transform (requires positive values)</option>
-                  <option value="log10">Log₁₀ transform (requires positive values)</option>
-                </select>
-                {(transform === "log2" || transform === "log10") && (
-                  <label className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-200">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900"
-                      checked={allowNonPositiveLog}
-                      onChange={(e) => setAllowNonPositiveLog(e.target.checked)}
-                    />
-                    <span>I confirm the log transform; zero/negative values will be excluded or adjusted.</span>
-                  </label>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <div className={labelClass}>Units (required)</div>
-                <input
-                  className={inputClass}
-                  value={units}
-                  onChange={(e) => setUnits(e.target.value)}
-                  placeholder="e.g., ng/mL or unitless"
-                />
-                {!units.trim() && <div className="text-xs font-semibold text-rose-600 dark:text-rose-300">Enter units or "unitless".</div>}
-              </div>
-
-              <div className="space-y-2">
-                <div className={labelClass}>Variance convention</div>
-                <div className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="radio"
-                      name="var-conv"
-                      className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      checked={varianceConvention === "sample"}
-                      onChange={() => setVarianceConvention("sample")}
-                    />
-                    <span>Sample (n−1) — default for SD/variance</span>
-                  </label>
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="radio"
-                      name="var-conv"
-                      className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      checked={varianceConvention === "population"}
-                      onChange={() => setVarianceConvention("population")}
-                    />
-                    <span>Population (n)</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className={labelClass}>Outlier fence (IQR multiplier)</div>
-                <div className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="radio"
-                      name="iqr-mult"
-                      className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      checked={iqrMultiplier === 1.5}
-                      onChange={() => setIqrMultiplier(1.5)}
-                    />
-                    <span>1.5× IQR (default)</span>
-                  </label>
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="radio"
-                      name="iqr-mult"
-                      className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      checked={iqrMultiplier === 3}
-                      onChange={() => setIqrMultiplier(3)}
-                    />
-                    <span>3× IQR (conservative)</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className={labelClass}>Publication formatting</div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <div className={helperClass}>Significant figures</div>
-                    <input
-                      type="number"
-                      min={1}
-                      max={6}
-                      value={formatOptions.sigFigs}
-                      onChange={(e) => {
-                        const v = Number(e.target.value) || defaultFormat.sigFigs;
-                        setFormatOptions((prev) => ({ ...prev, sigFigs: Math.min(Math.max(1, v), 6) }));
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className={helperClass}>Decimal places (optional override)</div>
-                    <input
-                      type="number"
-                      min={0}
-                      max={6}
-                      value={formatOptions.decimalPlaces ?? ""}
-                      placeholder="Auto"
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFormatOptions((prev) => ({
-                          ...prev,
-                          decimalPlaces: val === "" ? null : Math.min(Math.max(0, Number(val) || 0), 6),
-                        }));
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div className="col-span-full grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                      <input
-                        type="checkbox"
-                        checked={formatOptions.scientificNotation}
-                        onChange={(e) => setFormatOptions((p) => ({ ...p, scientificNotation: e.target.checked }))}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900"
-                      />
-                      Scientific notation
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                      <input
-                        type="checkbox"
-                        checked={formatOptions.thousandsSeparator}
-                        onChange={(e) => setFormatOptions((p) => ({ ...p, thousandsSeparator: e.target.checked }))}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900"
-                      />
-                      Thousands separator
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                      <input
-                        type="checkbox"
-                        checked={formatOptions.padTrailingZeros}
-                        onChange={(e) => setFormatOptions((p) => ({ ...p, padTrailingZeros: e.target.checked }))}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900"
-                      />
-                      Pad trailing zeros (if decimals set)
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card
-          title="2) Validation results"
-          description="Review cleaned rows, removals, and n-integrity signals."
-        >
-          <DataPreview usable={usable} removed={removed} />
-
-          <div className="mt-5 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
-            <div className="text-sm font-semibold text-slate-800 dark:text-slate-50">n-integrity</div>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg bg-slate-50/80 p-3 text-sm text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
-                <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Biological replicates (n_bio)</div>
-                <div className="text-lg font-semibold text-slate-900 dark:text-white">{nBioTotal}</div>
-              </div>
-              <div className="rounded-lg bg-slate-50/80 p-3 text-sm text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
-                <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Technical replicates (rows with tech_rep)</div>
-                <div className="text-lg font-semibold text-slate-900 dark:text-white">{nTechTotal}</div>
-              </div>
-              <div className="rounded-lg bg-slate-50/80 p-3 text-sm text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
-                <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Avg technical per biological</div>
-                <div className="text-lg font-semibold text-slate-900 dark:text-white">{format(avgTechPerBio, 2)}</div>
-              </div>
-              <div className="rounded-lg bg-slate-50/80 p-3 text-sm text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
-                <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Replicate handling</div>
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {replicateType === "technical"
-                    ? technicalHandling === "average"
-                      ? "Technical averaged within bio"
-                      : "Technical shown separately (n_bio defines SEM/CI)"
-                    : "Biological replicates only"}
-                </div>
-              </div>
-            </div>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-amber-800 dark:text-amber-200">
-              <li>SEM and CI always use n_bio (never technical replicate count).</li>
-              {techMissingBio && <li>Technical replicates detected without bio_rep; assign bio_rep to ensure correct n_bio.</li>}
-              {replicateType === "technical" && technicalHandling === "separate" && <li>When technical replicates are shown separately, variability summaries still rely on n_bio.</li>}
-              {mixedUnits && <li>Multiple units detected in data; normalize to a single unit. Global units field will be used for exports.</li>}
-              {!units.trim() && <li>Please enter units or "unitless" before exporting figures or bundles.</li>}
-            </ul>
-          </div>
-        </Card>
-
-        <Card title="3) Descriptive statistics" description="Per-group descriptive stats with guardrails for replicates and variability.">
-          <StatSummary
-            stats={stats}
-            showModes={showModes}
-            onToggleModes={(checked) => setShowModes(checked)}
-            format={format}
-            varianceConvention={varianceConvention}
-          />
-        </Card>
-
-        {stats.length > 0 && (
-          <Card title="4) Derived metrics" description="Fold/percent change vs reference group (always descriptive).">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">Reference group</div>
-              <select className={inputClass} value={safeReferenceGroup} onChange={(e) => setReferenceGroup(e.target.value)}>
+        <div className="grid gap-4 md:grid-cols-[1.2fr,1fr]">
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-sm">
+              <div className="text-base font-semibold text-slate-50">{summarySentence}</div>
+              <div className="text-sm text-slate-300">{variabilitySentence}</div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {stats.map((g) => (
-                  <option key={g.group} value={g.group}>
-                    {g.group}
-                  </option>
+                  <div key={g.group} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100">
+                    <div className="font-semibold">{g.group}</div>
+                    <div className="flex gap-3 text-slate-300">
+                      <span>mean {format(g.mean)}</span>
+                      <span>n {g.nBio}</span>
+                    </div>
+                  </div>
                 ))}
-              </select>
-              {(transform === "log2" || transform === "log10") && (
-                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/60 dark:text-amber-100">
-                  Fold-change shown on original scale; log transform applied to summaries.
-                </span>
-              )}
-            </div>
-            {foldChanges.length === 0 ? (
-              <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">Add at least one non-reference group to view fold changes.</div>
-            ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[480px] text-left text-sm text-slate-800 dark:text-slate-100">
-                  <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    <tr>
-                      <th className="px-3 py-2">Group</th>
-                      <th className="px-3 py-2">% change vs {safeReferenceGroup}</th>
-                      <th className="px-3 py-2">Fold change</th>
-                      <th className="px-3 py-2">Log₂ fold change</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {foldChanges.map((fc) => (
-                      <tr key={fc.group} className="border-t border-slate-100 dark:border-slate-800">
-                        <td className="px-3 py-2 font-semibold">{fc.group}</td>
-                        <td className="px-3 py-2">{format(fc.percentChange, 2)}%</td>
-                        <td className="px-3 py-2">{format(fc.foldChange)}</td>
-                        <td className="px-3 py-2">{fc.log2FoldChange === null ? "—" : format(fc.log2FoldChange)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
-        )}
-
-        {stats.length > 0 && (
-          <Card
-            title="5) Visualization preview (300 dpi-ready exports)"
-            description="Normality hint is heuristic; QQ plot is for visual assessment, not inferential."
-          >
-            <Visualizations
-              items={vizItems}
-              showQq={showQq}
-              onToggleQq={(checked) => setShowQq(checked)}
-              onExportFigure={exportFigure}
-              helper="Axis labels + units are required before export."
-            />
-          </Card>
-        )}
-
-        {stats.length > 0 && (
-          <Card title="6) Reporting text (copy-ready)" description="Copy-ready text for methods, results, and transparency log.">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
-                <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Methods snippet</div>
-                <p className="text-sm leading-6 text-slate-700 dark:text-slate-200">{methodsSnippet}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-                    onClick={() => navigator.clipboard.writeText(methodsSnippet)}
-                  >
-                    Copy methods
-                  </button>
-                  <button
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500/50"
-                    onClick={() => navigator.clipboard.writeText(`# Methods
-${methodsSnippet}`)}
-                  >
-                    Copy as markdown
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
-                <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Results snippet (descriptive only)</div>
-                <p className="text-sm leading-6 text-slate-700 dark:text-slate-200">{resultsSnippet}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-                    onClick={() => navigator.clipboard.writeText(resultsSnippet)}
-                  >
-                    Copy results
-                  </button>
-                  <button
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500/50"
-                    onClick={() => navigator.clipboard.writeText(`# Results
-${resultsSnippet}`)}
-                  >
-                    Copy as markdown
-                  </button>
-                </div>
               </div>
             </div>
+          </div>
+          {defaultPlot}
+        </div>
 
-            <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
-              <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Transparency & compliance log</div>
-              <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-6 text-slate-700 dark:text-slate-200">
-                {transparencyLog.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                Descriptive only — no hypothesis testing; reviewer-friendly defaults enforced.
-              </div>
+        <div className="space-y-3">
+          {accordionSections.map((section) => (
+            <div key={section.key} className="rounded-2xl border border-slate-800 bg-slate-900/70">
+              <button
+                className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-slate-100"
+                onClick={() => toggleSection(section.key)}
+              >
+                {section.label}
+                <span className="text-xs text-slate-400">{openSection === section.key ? "Hide" : "Show"}</span>
+              </button>
+              {openSection === section.key && <div className="border-t border-slate-800 p-4">{section.render()}</div>}
             </div>
-          </Card>
-        )}
-
-        {stats.length > 0 && (
-          <Card title="7) Export & reviewer packages">
-            <ExportPanel
-              onReviewerReport={handleReviewerReport}
-              onBundleExport={handleBundleExport}
-              buildingReport={buildingReport}
-              exporting={exporting}
-              units={units}
-            />
-          </Card>
-        )}
+          ))}
+        </div>
       </div>
     </main>
   );
