@@ -5,7 +5,7 @@ interface CardProps {
   description?: ReactNode;
   badge?: ReactNode;
   actions?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   id?: string;
 }
