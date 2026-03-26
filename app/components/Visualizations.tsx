@@ -4,7 +4,7 @@ interface VizItem {
   key: string;
   label: string;
   content: ReactNode;
-  refElement?: React.RefObject<HTMLDivElement>;
+  refElement?: React.RefObject<HTMLDivElement | null>;
   exportName?: string;
 }
 
